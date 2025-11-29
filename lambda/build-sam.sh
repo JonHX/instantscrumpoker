@@ -19,11 +19,8 @@ npm ci
 
 # Build TypeScript to temporary directory
 echo "🔨 Compiling TypeScript..."
-# Temporarily change outDir for build
-TSCONFIG_TEMP=$(mktemp)
-sed 's|"outDir": "./lambda-build"|"outDir": "./ts-build"|' tsconfig.json > "$TSCONFIG_TEMP"
-npx tsc --project "$TSCONFIG_TEMP"
-rm "$TSCONFIG_TEMP"
+# Use --outDir flag instead of modifying tsconfig
+npx tsc --outDir ./ts-build
 
 # Copy compiled JavaScript files
 echo "📋 Copying compiled files..."
@@ -33,6 +30,10 @@ fi
 if [ -d "$TS_BUILD_DIR/lib" ]; then
   cp -r "$TS_BUILD_DIR/lib" "$LAMBDA_PACKAGE/"
 fi
+
+# Copy package.json for production dependencies
+echo "📋 Copying package.json..."
+cp package.json "$LAMBDA_PACKAGE/"
 
 # Install production dependencies into lambda-build
 echo "📦 Installing production dependencies..."
