@@ -181,6 +181,7 @@ Resources:
 
   FrontendBucketPolicy:
     Type: AWS::S3::BucketPolicy
+    DependsOn: FrontendBucket
     Properties:
       Bucket: !Ref FrontendBucket
       PolicyDocument:
@@ -190,7 +191,9 @@ Resources:
             Effect: Allow
             Principal: '*'
             Action: 's3:GetObject'
-            Resource: !Sub 'arn:aws:s3:::${FrontendBucket}/*'
+            Resource: !Sub 
+              - 'arn:aws:s3:::${BucketName}/*'
+              - BucketName: !Ref FrontendBucket
 
   # ============================================================================
   # WEBSOCKET API GATEWAY
