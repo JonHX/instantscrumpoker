@@ -1,0 +1,7 @@
+node_modules/
+lambda-build/
+ts-build/
+.aws-sam/
+*.log
+.DS_Store
+

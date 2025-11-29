@@ -1,0 +1,390 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: ScrumPoker Service - Lambda + DynamoDB with WebSocket support
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Environment name
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 256
+    Runtime: nodejs20.x
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref RoomsTable
+        CONNECTIONS_TABLE: !Ref ConnectionsTable
+
+Resources:
+  # ============================================================================
+  # DYNAMODB TABLE - Rooms and Data
+  # ============================================================================
+  RoomsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub scrumpoker-rooms-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1
+          KeySchema:
+            - AttributeName: PK
+              KeyType: HASH
+            - AttributeName: SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: TTL
+        Enabled: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Service
+          Value: scrumpoker
+
+  # ============================================================================
+  # DYNAMODB TABLE - WebSocket Connections
+  # ============================================================================
+  ConnectionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub scrumpoker-connections-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: GSI1PK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1
+          KeySchema:
+            - AttributeName: GSI1PK
+              KeyType: HASH
+            - AttributeName: SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: TTL
+        Enabled: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Service
+          Value: scrumpoker
+
+  # ============================================================================
+  # IAM ROLE - Lambda Execution Role
+  # ============================================================================
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: ScrumPokerPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # DynamoDB access
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource:
+                  - !GetAtt RoomsTable.Arn
+                  - !Sub '${RoomsTable.Arn}/index/*'
+                  - !GetAtt ConnectionsTable.Arn
+                  - !Sub '${ConnectionsTable.Arn}/index/*'
+              # API Gateway Management API (for WebSocket)
+              - Effect: Allow
+                Action:
+                  - execute-api:ManageConnections
+                Resource: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/${Environment}/*'
+
+  # ============================================================================
+  # HTTP API GATEWAY
+  # ============================================================================
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Name: !Sub scrumpoker-api-${Environment}
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+        MaxAge: 3600
+
+  # ============================================================================
+  # S3 BUCKET - Static Website Hosting
+  # ============================================================================
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub scrumpoker-frontend-${Environment}
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Service
+          Value: scrumpoker
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Sub '${FrontendBucket}/*'
+
+  # ============================================================================
+  # WEBSOCKET API GATEWAY
+  # ============================================================================
+  WebSocketApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub scrumpoker-websocket-${Environment}
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: '$request.body.action'
+
+  WebSocketApiStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref WebSocketApi
+      StageName: !Sub ${Environment}
+      AutoDeploy: true
+
+  # ============================================================================
+  # LAMBDA FUNCTIONS - HTTP API Handlers
+  # ============================================================================
+  CreateRoomFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub scrumpoker-create-room-${Environment}
+      Handler: handlers.createRoom.handler
+      CodeUri: ./lambda-build/
+      Description: Create a new ScrumPoker room
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        HttpApiEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /api/rooms
+            Method: post
+      Tags:
+        Environment: !Ref Environment
+        Service: scrumpoker
+
+  GetRoomFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub scrumpoker-get-room-${Environment}
+      Handler: handlers.getRoom.handler
+      CodeUri: ./lambda-build/
+      Description: Get room data
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        HttpApiEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /api/rooms/{roomId}
+            Method: get
+      Tags:
+        Environment: !Ref Environment
+        Service: scrumpoker
+
+  JoinRoomFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub scrumpoker-join-room-${Environment}
+      Handler: handlers.joinRoom.handler
+      CodeUri: ./lambda-build/
+      Description: Join a room
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          WS_ENDPOINT: !Sub 'wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
+      Events:
+        HttpApiEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /api/rooms/{roomId}/join
+            Method: post
+      Tags:
+        Environment: !Ref Environment
+        Service: scrumpoker
+
+  VoteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub scrumpoker-vote-${Environment}
+      Handler: handlers.vote.handler
+      CodeUri: ./lambda-build/
+      Description: Submit a vote
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          WS_ENDPOINT: !Sub 'wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
+      Events:
+        HttpApiEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /api/rooms/{roomId}/vote
+            Method: post
+      Tags:
+        Environment: !Ref Environment
+        Service: scrumpoker
+
+  # ============================================================================
+  # LAMBDA FUNCTIONS - WebSocket Handlers
+  # ============================================================================
+  WebSocketConnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub scrumpoker-websocket-connect-${Environment}
+      Handler: handlers.websocket.connect.handler
+      CodeUri: ./lambda-build/
+      Description: WebSocket connection handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        WebSocketConnect:
+          Type: WebSocket
+          Properties:
+            Api: !Ref WebSocketApi
+            Route: $connect
+      Tags:
+        Environment: !Ref Environment
+        Service: scrumpoker
+
+  WebSocketDisconnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub scrumpoker-websocket-disconnect-${Environment}
+      Handler: handlers.websocket.disconnect.handler
+      CodeUri: ./lambda-build/
+      Description: WebSocket disconnection handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        WebSocketDisconnect:
+          Type: WebSocket
+          Properties:
+            Api: !Ref WebSocketApi
+            Route: $disconnect
+      Tags:
+        Environment: !Ref Environment
+        Service: scrumpoker
+
+  WebSocketDefaultFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub scrumpoker-websocket-default-${Environment}
+      Handler: handlers.websocket.default.handler
+      CodeUri: ./lambda-build/
+      Description: WebSocket message handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        WebSocketDefault:
+          Type: WebSocket
+          Properties:
+            Api: !Ref WebSocketApi
+            Route: $default
+      Tags:
+        Environment: !Ref Environment
+        Service: scrumpoker
+
+Outputs:
+  HttpApiUrl:
+    Description: HTTP API Gateway URL
+    Value: !Sub 'https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com'
+    Export:
+      Name: !Sub scrumpoker-http-api-url-${Environment}
+
+  WebSocketApiUrl:
+    Description: WebSocket API Gateway URL
+    Value: !Sub 'wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
+    Export:
+      Name: !Sub scrumpoker-websocket-api-url-${Environment}
+
+  RoomsTableName:
+    Description: Rooms DynamoDB Table Name
+    Value: !Ref RoomsTable
+    Export:
+      Name: !Sub scrumpoker-rooms-table-${Environment}
+
+  ConnectionsTableName:
+    Description: Connections DynamoDB Table Name
+    Value: !Ref ConnectionsTable
+    Export:
+      Name: !Sub scrumpoker-connections-table-${Environment}
+
+  FrontendWebsiteUrl:
+    Description: Frontend S3 Website URL
+    Value: !Sub 'http://${FrontendBucket}.s3-website-${AWS::Region}.amazonaws.com'
+    Export:
+      Name: !Sub scrumpoker-frontend-website-url-${Environment}
+
+  FrontendBucketName:
+    Description: Frontend S3 Bucket Name
+    Value: !Ref FrontendBucket
+    Export:
+      Name: !Sub scrumpoker-frontend-bucket-${Environment}
+
