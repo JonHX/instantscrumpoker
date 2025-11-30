@@ -29,7 +29,10 @@ export const handler = async (event: APIGatewayProxyWebsocketEventV2) => {
             PK: `connectionId#${connectionId}`,
             SK: "METADATA",
           },
-          UpdateExpression: "SET roomId = :roomId, GSI1PK = :gsi1pk, TTL = :ttl",
+          UpdateExpression: "SET roomId = :roomId, GSI1PK = :gsi1pk, #ttl = :ttl",
+          ExpressionAttributeNames: {
+            "#ttl": "TTL",
+          },
           ExpressionAttributeValues: {
             ":roomId": roomId,
             ":gsi1pk": `roomId#${roomId}`,

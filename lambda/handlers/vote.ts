@@ -77,7 +77,10 @@ export const handler = async (
           SK: "estimate#CURRENT",
         },
         UpdateExpression:
-          "SET story_id = :sid, story_title = :title, votes = :votes, revealed = :revealed, created_at = :created, TTL = :ttl",
+          "SET story_id = :sid, story_title = :title, votes = :votes, revealed = :revealed, created_at = :created, #ttl = :ttl",
+        ExpressionAttributeNames: {
+          "#ttl": "TTL",
+        },
         ExpressionAttributeValues: {
           ":sid": currentEstimate.story_id,
           ":title": currentEstimate.story_title,
