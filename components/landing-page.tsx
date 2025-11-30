@@ -79,36 +79,49 @@ export function LandingPage({ onCreateRoom, onJoinRoom }: LandingPageProps) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Skip to main content link for accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-accent focus:text-accent-foreground focus:rounded-lg focus:font-semibold"
+      >
+        Skip to main content
+      </a>
+
       {/* Top Navigation Bar */}
-      <nav className="w-full border-b border-border bg-card/50 backdrop-blur-sm">
+      <nav className="w-full border-b border-border bg-card/50 backdrop-blur-sm" role="navigation" aria-label="Main navigation">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
-            <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
+          <Link 
+            href="/" 
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 rounded-lg"
+            aria-label="InstantScrumPoker home"
+          >
+            <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center" aria-hidden="true">
               <Zap className="w-5 h-5 text-accent-foreground" />
             </div>
             <span className="text-lg font-bold text-foreground">InstantScrumPoker</span>
           </Link>
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-lg border border-border hover:bg-secondary transition-colors"
-            aria-label="Toggle theme"
+            className="p-2 rounded-lg border border-border hover:bg-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+            aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+            type="button"
           >
-            {isDark ? <Sun className="w-5 h-5 text-foreground" /> : <Moon className="w-5 h-5 text-foreground" />}
+            {isDark ? <Sun className="w-5 h-5 text-foreground" aria-hidden="true" /> : <Moon className="w-5 h-5 text-foreground" aria-hidden="true" />}
           </button>
         </div>
       </nav>
 
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center px-4 py-12">
+      <main id="main-content" className="flex-1 flex items-center justify-center px-4 py-12" role="main">
         <div className="w-full max-w-2xl space-y-8 text-center">
-          <div className="space-y-4">
+          <header className="space-y-4">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground text-balance">
               Estimate Together, Instantly
             </h1>
             <p className="text-lg text-muted-foreground text-balance">
               Real-time scrum poker planning for distributed teams. Create a room, invite your team, and start estimating.
             </p>
-          </div>
+          </header>
 
           {/* Features Grid */}
           <div className="grid md:grid-cols-3 gap-4">
@@ -132,20 +145,25 @@ export function LandingPage({ onCreateRoom, onJoinRoom }: LandingPageProps) {
           {/* Create Room Card */}
           <Card className="bg-card border-border p-8 space-y-6">
             <div className="space-y-3">
-              <label className="block text-sm font-medium text-foreground text-left">Room Name</label>
+              <label htmlFor="room-name-input" className="block text-sm font-medium text-foreground text-left">Room Name</label>
               <Input
+                id="room-name-input"
                 placeholder="e.g., Sprint 25 Estimation"
                 value={roomName}
                 onChange={(e) => setRoomName(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && handleCreateRoom()}
-                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
+                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+                aria-required="true"
+                aria-describedby="room-name-description"
               />
+              <p id="room-name-description" className="sr-only">Enter a name for your estimation room</p>
             </div>
 
             <Button
               onClick={handleCreateRoom}
               disabled={!roomName.trim() || isLoading}
-              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6 text-base rounded-lg transition-all"
+              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6 text-base rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label={isLoading ? "Creating room" : "Create estimation room"}
             >
               {isLoading ? "Creating..." : "Create Estimation Room"}
             </Button>
@@ -157,9 +175,10 @@ export function LandingPage({ onCreateRoom, onJoinRoom }: LandingPageProps) {
           <Button
             onClick={() => setShowJoinModal(true)}
             variant="outline"
-            className="w-full border-border text-foreground hover:bg-secondary bg-transparent py-6 flex items-center justify-center gap-2"
+            className="w-full border-border text-foreground hover:bg-secondary bg-transparent py-6 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+            aria-label="Join room with code"
           >
-            <LogIn className="w-4 h-4" />
+            <LogIn className="w-4 h-4" aria-hidden="true" />
             Join Room with Code
           </Button>
 
@@ -223,7 +242,7 @@ export function LandingPage({ onCreateRoom, onJoinRoom }: LandingPageProps) {
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
       {showJoinModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
@@ -231,8 +250,9 @@ export function LandingPage({ onCreateRoom, onJoinRoom }: LandingPageProps) {
             <h2 className="text-2xl font-bold text-foreground">Join Estimation Room</h2>
 
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-foreground">Room Code or Room ID</label>
+              <label htmlFor="join-code-input" className="block text-sm font-medium text-foreground">Room Code or Room ID</label>
               <Input
+                id="join-code-input"
                 placeholder="e.g., a1b2 or sprint-25-a1b2"
                 value={joinCode}
                 onChange={(e) => {
@@ -240,13 +260,20 @@ export function LandingPage({ onCreateRoom, onJoinRoom }: LandingPageProps) {
                   setJoinError("")
                 }}
                 onKeyPress={(e) => e.key === "Enter" && handleJoinRoom()}
-                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground font-mono text-lg text-center"
+                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground font-mono text-lg text-center focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
                 autoFocus
+                aria-required="true"
+                aria-invalid={!!joinError}
+                aria-describedby={joinError ? "join-error" : "join-code-description"}
               />
-              <p className="text-xs text-muted-foreground">Enter the 4-character code or full room ID</p>
+              <p id="join-code-description" className="text-xs text-muted-foreground">Enter the 4-character code or full room ID</p>
             </div>
 
-            {joinError && <p className="text-sm text-destructive">{joinError}</p>}
+            {joinError && (
+              <p id="join-error" className="text-sm text-destructive" role="alert" aria-live="polite">
+                {joinError}
+              </p>
+            )}
 
             <div className="flex gap-3">
               <Button
@@ -256,14 +283,16 @@ export function LandingPage({ onCreateRoom, onJoinRoom }: LandingPageProps) {
                   setJoinCode("")
                 }}
                 variant="outline"
-                className="flex-1 border-border text-foreground hover:bg-secondary bg-transparent"
+                className="flex-1 border-border text-foreground hover:bg-secondary bg-transparent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+                aria-label="Cancel joining room"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleJoinRoom}
                 disabled={!joinCode.trim() || isLoading}
-                className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
+                className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label={isLoading ? "Joining room" : "Join room"}
               >
                 {isLoading ? "Joining..." : "Join"}
               </Button>

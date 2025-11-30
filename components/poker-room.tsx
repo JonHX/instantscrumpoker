@@ -35,7 +35,8 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
   const [timerSeconds, setTimerSeconds] = useState(300)
   const [isTimerRunning, setIsTimerRunning] = useState(false)
   const [discussionMode, setDiscussionMode] = useState(false)
-  // Check localStorage synchronously on mount
+  
+  // Check localStorage synchronously on mount - use lazy initialization
   const getSavedName = () => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem(`scrumpoker-name-${roomId}`)
@@ -43,7 +44,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
     }
     return ""
   }
-  const [userName, setUserName] = useState(getSavedName)
+  const [userName, setUserName] = useState(() => getSavedName())
   const [hasJoined, setHasJoined] = useState(false)
   const [isJoining, setIsJoining] = useState(false)
   const [isDark, setIsDark] = useState(false)
@@ -94,7 +95,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
     // Only attempt auto-join once on mount
     if (autoJoinAttemptedRef.current || hasJoined || isJoining) return
     
-    // Check localStorage for saved name (not the userName state which changes as user types)
+    // Check localStorage for saved name for this specific room
     const savedName = localStorage.getItem(`scrumpoker-name-${roomId}`)
     if (savedName && savedName.trim()) {
       autoJoinAttemptedRef.current = true
@@ -103,16 +104,21 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
       // Auto-join with saved name
       const autoJoin = async () => {
         try {
-          const { participantId: newParticipantId } = await joinRoom(roomId, { name: savedName.trim() })
+          const trimmedName = savedName.trim()
+          // Ensure name is saved to localStorage (in case it wasn't before)
+          localStorage.setItem(`scrumpoker-name-${roomId}`, trimmedName)
+          
+          const { participantId: newParticipantId } = await joinRoom(roomId, { name: trimmedName })
           setParticipantId(newParticipantId)
 
           const newParticipant: Participant = {
             id: newParticipantId,
-            name: savedName.trim(),
+            name: trimmedName,
             voted: false,
           }
           setParticipants([newParticipant])
           setHasJoined(true)
+          setUserName(trimmedName) // Ensure userName state matches
           
           // Fetch room data
           await fetchRoomData()
@@ -121,6 +127,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
           // If auto-join fails, clear the saved name and show join screen
           localStorage.removeItem(`scrumpoker-name-${roomId}`)
           setUserName("")
+          autoJoinAttemptedRef.current = false // Reset so user can try again
         } finally {
           setIsJoining(false)
         }
@@ -352,44 +359,66 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
 
   if (!hasJoined) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <Card className="w-full max-w-md bg-card border-border p-8 space-y-6">
-          <div className="flex items-center gap-2">
-            <Zap className="w-6 h-6 text-accent" />
-            <h1 className="text-2xl font-bold text-foreground">Join Room</h1>
+      <div className="min-h-screen bg-background flex flex-col">
+        <nav className="w-full border-b border-border bg-card/50 backdrop-blur-sm" role="navigation" aria-label="Main navigation">
+          <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <Link 
+              href="/" 
+              className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 rounded-lg"
+              aria-label="InstantScrumPoker home"
+            >
+              <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center" aria-hidden="true">
+                <Zap className="w-5 h-5 text-accent-foreground" />
+              </div>
+              <span className="text-lg font-bold text-foreground">InstantScrumPoker</span>
+            </Link>
           </div>
+        </nav>
+        <main className="flex-1 flex items-center justify-center px-4" role="main">
+          <Card className="w-full max-w-md bg-card border-border p-8 space-y-6">
+            <div className="flex items-center gap-2">
+              <Zap className="w-6 h-6 text-accent" aria-hidden="true" />
+              <h1 className="text-2xl font-bold text-foreground">Join Room</h1>
+            </div>
 
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-foreground">Your Name</label>
-            <Input
-              placeholder="Enter your name"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleJoin()}
-              className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
-              autoFocus
-            />
-          </div>
+            <div className="space-y-2">
+              <label htmlFor="join-name-input" className="block text-sm font-medium text-foreground">Your Name</label>
+              <Input
+                id="join-name-input"
+                placeholder="Enter your name"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && handleJoin()}
+                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+                autoFocus
+                aria-required="true"
+                aria-describedby="join-name-description"
+              />
+              <p id="join-name-description" className="sr-only">Enter your name to join the estimation room</p>
+            </div>
 
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Room ID</p>
-            <p className="font-mono text-accent text-sm break-all font-bold text-lg">
-              {roomId}
-            </p>
-          </div>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Room ID</p>
+              <p className="font-mono text-accent text-sm break-all font-bold text-lg" aria-label={`Room ID: ${roomId}`}>
+                {roomId}
+              </p>
+            </div>
 
-          <Button
-            onClick={handleJoin}
-            disabled={!userName.trim() || hasJoined || isJoining}
-            className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6"
-          >
-            {isJoining ? "Joining..." : "Join Estimation"}
-          </Button>
-        </Card>
-        <audio
-          ref={audioRef}
-          src="data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA=="
-        />
+            <Button
+              onClick={handleJoin}
+              disabled={!userName.trim() || hasJoined || isJoining}
+              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label={isJoining ? "Joining room" : "Join estimation room"}
+            >
+              {isJoining ? "Joining..." : "Join Estimation"}
+            </Button>
+          </Card>
+          <audio
+            ref={audioRef}
+            src="data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA=="
+            aria-hidden="true"
+          />
+        </main>
       </div>
     )
   }
@@ -399,19 +428,32 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
   const votedCount = participants.filter((p) => p.voted).length
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
+    <div className="min-h-screen bg-background flex flex-col">
       {showConfetti && <ConfettiCannon />}
       {showShareModal && <ShareModal roomId={roomId} roomName={roomName} onClose={() => setShowShareModal(false)} />}
       <audio
         ref={audioRef}
         src="data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA=="
+        aria-hidden="true"
       />
 
+      {/* Skip to main content link for accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-accent focus:text-accent-foreground focus:rounded-lg focus:font-semibold"
+      >
+        Skip to main content
+      </a>
+
       {/* Header */}
-      <nav className="w-full border-b border-border bg-card/50 backdrop-blur-sm mb-8">
+      <nav className="w-full border-b border-border bg-card/50 backdrop-blur-sm" role="navigation" aria-label="Main navigation">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
-            <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
+          <Link 
+            href="/" 
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 rounded-lg"
+            aria-label="InstantScrumPoker home"
+          >
+            <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center" aria-hidden="true">
               <Zap className="w-5 h-5 text-accent-foreground" />
             </div>
             <span className="text-lg font-bold text-foreground">InstantScrumPoker</span>
@@ -419,47 +461,53 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowShareModal(true)}
-              className="p-2 rounded-lg border border-border hover:bg-secondary transition-colors"
+              className="p-2 rounded-lg border border-border hover:bg-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
               aria-label="Share room"
+              type="button"
             >
-              <Share2 className="w-4 h-4 text-foreground" />
+              <Share2 className="w-4 h-4 text-foreground" aria-hidden="true" />
             </button>
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg border border-border hover:bg-secondary transition-colors"
-              aria-label="Toggle theme"
+              className="p-2 rounded-lg border border-border hover:bg-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+              aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+              type="button"
             >
-              {isDark ? <Sun className="w-4 h-4 text-foreground" /> : <Moon className="w-4 h-4 text-foreground" />}
+              {isDark ? <Sun className="w-4 h-4 text-foreground" aria-hidden="true" /> : <Moon className="w-4 h-4 text-foreground" aria-hidden="true" />}
             </button>
             <Button
               onClick={onExit}
               variant="outline"
-              className="flex items-center gap-2 border-border text-muted-foreground hover:text-foreground bg-transparent"
+              className="flex items-center gap-2 border-border text-muted-foreground hover:text-foreground bg-transparent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+              aria-label="Exit room"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-4 h-4" aria-hidden="true" />
               Exit
             </Button>
           </div>
         </div>
       </nav>
 
-      <div className="grid lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+      <main id="main-content" className="flex-1 px-4 md:px-8 py-8" role="main">
+        <div className="grid lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Timer & Discussion */}
           {discussionMode && (
-            <Card className="bg-card border-border p-6">
-              <div className="text-center space-y-4">
-                <h2 className="text-lg font-semibold text-foreground">Discussion Round</h2>
-                <Timer
-                  seconds={timerSeconds}
-                  isRunning={isTimerRunning}
-                  onEnd={playSound}
-                  onExtend={handleExtendTimer}
-                  onStart={handleStartTimer}
-                />
-              </div>
-            </Card>
+            <section aria-labelledby="discussion-heading">
+              <Card className="bg-card border-border p-6">
+                <div className="text-center space-y-4">
+                  <h2 id="discussion-heading" className="text-lg font-semibold text-foreground">Discussion Round</h2>
+                  <Timer
+                    seconds={timerSeconds}
+                    isRunning={isTimerRunning}
+                    onEnd={playSound}
+                    onExtend={handleExtendTimer}
+                    onStart={handleStartTimer}
+                  />
+                </div>
+              </Card>
+            </section>
           )}
 
           {/* Clean Sweep Message */}
@@ -471,157 +519,174 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
           )}
 
           {/* Voting Phase */}
-          <Card className="bg-card border-border p-8 space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-foreground">Estimate Points</h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {isVotingOpen ? (currentVote ? "Vote submitted" : "Select your estimate") : "Votes revealed"}
-                </p>
+          <section aria-labelledby="voting-heading">
+            <Card className="bg-card border-border p-8 space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 id="voting-heading" className="text-xl font-bold text-foreground">Estimate Points</h2>
+                  <p className="text-sm text-muted-foreground mt-1" role="status" aria-live="polite">
+                    {isVotingOpen ? (currentVote ? "Vote submitted" : "Select your estimate") : "Votes revealed"}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-muted-foreground">Votes In</p>
+                  <p className="text-2xl font-bold text-accent" aria-live="polite" aria-atomic="true">
+                    {votedCount}/{participants.length}
+                  </p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground">Votes In</p>
-                <p className="text-2xl font-bold text-accent">
-                  {votedCount}/{participants.length}
-                </p>
-              </div>
-            </div>
 
-            {isVotingOpen ? (
-              <PokerCards
-                cards={FIBONACCI}
-                selectedCard={currentVote}
-                onSelectCard={handleVote}
-                isDisabled={!!currentVote}
-              />
-            ) : (
-              <div className="space-y-3">
-                {participants.map((p) => {
-                  const isOutlier = outliers.some((o) => o.id === p.id)
-                  const isTopVote = p.vote === mostCommon?.[0]
+              {isVotingOpen ? (
+                <div role="group" aria-label="Select your estimate">
+                  <PokerCards
+                    cards={FIBONACCI}
+                    selectedCard={currentVote}
+                    onSelectCard={handleVote}
+                    isDisabled={!!currentVote}
+                  />
+                </div>
+              ) : (
+                <div className="space-y-3" role="list" aria-label="Vote results">
+                  {participants.map((p) => {
+                    const isOutlier = outliers.some((o) => o.id === p.id)
+                    const isTopVote = p.vote === mostCommon?.[0]
 
-                  return (
-                    <div
-                      key={p.id}
-                      className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
-                        isOutlier
-                          ? "bg-destructive/10 border-destructive/50"
-                          : isTopVote
-                            ? "bg-accent/10 border-accent ring-2 ring-accent/30"
-                            : "bg-secondary border-border"
-                      }`}
-                    >
-                      <span className="font-medium text-foreground">{p.name}</span>
-                      <div className="flex items-center gap-2">
-                        <span className={`font-bold text-lg ${isOutlier ? "text-destructive" : "text-accent"}`}>
-                          {p.vote || "—"}
-                        </span>
-                        {isTopVote && mostCommon?.[1]! > 1 && (
-                          <span className="text-xs font-bold px-2 py-1 rounded-full bg-accent/20 text-accent">
-                            Most chosen
+                    return (
+                      <div
+                        key={p.id}
+                        role="listitem"
+                        className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
+                          isOutlier
+                            ? "bg-destructive/10 border-destructive/50"
+                            : isTopVote
+                              ? "bg-accent/10 border-accent ring-2 ring-accent/30"
+                              : "bg-secondary border-border"
+                        }`}
+                      >
+                        <span className="font-medium text-foreground">{p.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className={`font-bold text-lg ${isOutlier ? "text-destructive" : "text-accent"}`} aria-label={`${p.name} voted ${p.vote || "no vote"}`}>
+                            {p.vote || "—"}
                           </span>
-                        )}
-                        {isOutlier && <span className="text-xs font-bold text-destructive">Outlier</span>}
+                          {isTopVote && mostCommon?.[1]! > 1 && (
+                            <span className="text-xs font-bold px-2 py-1 rounded-full bg-accent/20 text-accent" aria-label="Most chosen vote">
+                              Most chosen
+                            </span>
+                          )}
+                          {isOutlier && <span className="text-xs font-bold text-destructive" aria-label="Outlier vote">Outlier</span>}
+                        </div>
                       </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </Card>
+                    )
+                  })}
+                </div>
+              )}
+            </Card>
+          </section>
 
           {/* Previous Estimates */}
           {previousEstimates.length > 0 && (
-            <Card className="bg-card border-border p-6 space-y-4">
-              <h3 className="text-base font-bold text-foreground">Previous Estimates</h3>
-              <div className="space-y-2">
-                {previousEstimates.map((estimate, index) => (
-                  <div
-                    key={estimate.story_id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-secondary border border-border"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-bold text-accent">#{previousEstimates.length - index}</span>
-                      <span className="text-sm text-foreground">{estimate.story_title}</span>
+            <section aria-labelledby="previous-estimates-heading">
+              <Card className="bg-card border-border p-6 space-y-4">
+                <h3 id="previous-estimates-heading" className="text-base font-bold text-foreground">Previous Estimates</h3>
+                <div className="space-y-2" role="list" aria-label="Previous estimates">
+                  {previousEstimates.map((estimate, index) => (
+                    <div
+                      key={estimate.story_id}
+                      role="listitem"
+                      className="flex items-center justify-between p-3 rounded-lg bg-secondary border border-border"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-bold text-accent" aria-label={`Estimate number ${previousEstimates.length - index}`}>#{previousEstimates.length - index}</span>
+                        <span className="text-sm text-foreground">{estimate.story_title}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {Object.entries(estimate.votes || {}).map(([pid, vote]: [string, any]) => (
+                          <span key={pid} className="text-xs text-muted-foreground" aria-label={`Vote: ${vote.estimate}`}>
+                            {vote.estimate}
+                          </span>
+                        ))}
+                        {estimate.outcome && (
+                          <span className="font-bold text-accent ml-2" aria-label={`Final outcome: ${estimate.outcome}`}>→ {estimate.outcome}</span>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {Object.entries(estimate.votes || {}).map(([pid, vote]: [string, any]) => (
-                        <span key={pid} className="text-xs text-muted-foreground">
-                          {vote.estimate}
-                        </span>
-                      ))}
-                      {estimate.outcome && (
-                        <span className="font-bold text-accent ml-2">→ {estimate.outcome}</span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
+                  ))}
+                </div>
+              </Card>
+            </section>
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap gap-3">
-            {isVotingOpen && currentVote && (
-              <Button
-                onClick={handleRevealVotes}
-                className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6"
-              >
-                Reveal Votes
-              </Button>
-            )}
-
-            {!isVotingOpen && !isCleanSweep && (
-              <>
-                {!discussionMode && (
-                  <Button
-                    onClick={() => setDiscussionMode(true)}
-                    variant="outline"
-                    className="flex-1 flex items-center justify-center gap-2 border-border text-foreground hover:bg-secondary bg-transparent"
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                    Start Discussion
-                  </Button>
-                )}
-              </>
-            )}
-
-            {(!isVotingOpen || isCleanSweep) && (
-              <Card className="bg-card border-border p-6 space-y-4">
-                <h3 className="text-base font-bold text-foreground">Select Final Outcome</h3>
-                <p className="text-sm text-muted-foreground">Choose the final estimate value before proceeding to the next round</p>
-                <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
-                  {FIBONACCI.map((value) => (
-                    <button
-                      key={value}
-                      onClick={() => setSelectedOutcome(value)}
-                      className={`p-3 rounded-lg border-2 font-bold text-lg transition-all ${
-                        selectedOutcome === value
-                          ? "bg-accent border-accent text-accent-foreground ring-2 ring-accent/30"
-                          : "bg-secondary border-border text-foreground hover:border-accent/50"
-                      }`}
-                    >
-                      {value}
-                    </button>
-                  ))}
-                </div>
+          <section aria-label="Room actions">
+            <div className="flex flex-wrap gap-3">
+              {isVotingOpen && currentVote && (
                 <Button
-                  onClick={handleNextEstimate}
-                  disabled={!selectedOutcome}
-                  className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleRevealVotes}
+                  className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+                  aria-label="Reveal all votes"
                 >
-                  Next Estimate
+                  Reveal Votes
                 </Button>
-              </Card>
-            )}
-          </div>
+              )}
+
+              {!isVotingOpen && !isCleanSweep && (
+                <>
+                  {!discussionMode && (
+                    <Button
+                      onClick={() => setDiscussionMode(true)}
+                      variant="outline"
+                      className="flex-1 flex items-center justify-center gap-2 border-border text-foreground hover:bg-secondary bg-transparent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+                      aria-label="Start discussion round"
+                    >
+                      <MessageSquare className="w-4 h-4" aria-hidden="true" />
+                      Start Discussion
+                    </Button>
+                  )}
+                </>
+              )}
+
+              {(!isVotingOpen || isCleanSweep) && (
+                <Card className="bg-card border-border p-6 space-y-4 w-full">
+                  <h3 className="text-base font-bold text-foreground">Select Final Outcome</h3>
+                  <p className="text-sm text-muted-foreground">Choose the final estimate value before proceeding to the next round</p>
+                  <div className="grid grid-cols-3 md:grid-cols-5 gap-2" role="group" aria-label="Select final outcome">
+                    {FIBONACCI.map((value) => (
+                      <button
+                        key={value}
+                        onClick={() => setSelectedOutcome(value)}
+                        className={`p-3 rounded-lg border-2 font-bold text-lg transition-all focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 ${
+                          selectedOutcome === value
+                            ? "bg-accent border-accent text-accent-foreground ring-2 ring-accent/30"
+                            : "bg-secondary border-border text-foreground hover:border-accent/50"
+                        }`}
+                        aria-pressed={selectedOutcome === value}
+                        aria-label={`Select ${value} as final outcome`}
+                        type="button"
+                      >
+                        {value}
+                      </button>
+                    ))}
+                  </div>
+                  <Button
+                    onClick={handleNextEstimate}
+                    disabled={!selectedOutcome}
+                    className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+                    aria-label={selectedOutcome ? "Proceed to next estimate" : "Select an outcome first"}
+                  >
+                    Next Estimate
+                  </Button>
+                </Card>
+              )}
+            </div>
+          </section>
         </div>
 
         {/* Sidebar - Participants */}
-        <div>
+        <aside aria-label="Participants list">
           <ParticipantsList participants={participants} />
-        </div>
+        </aside>
       </div>
+      </main>
     </div>
   )
 }
