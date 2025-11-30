@@ -58,13 +58,14 @@ export const handler = async (
         joinedAt: p.joinedAt,
         vote: roomData.currentEstimate?.votes[p.id]?.estimate,
       })),
+      previousEstimates: roomData.previousEstimates || [],
     };
 
     return {
       statusCode: 200,
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
+        ...getCorsHeaders(origin),
       },
       body: JSON.stringify(response),
     };
@@ -76,7 +77,7 @@ export const handler = async (
       statusCode: 500,
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
+        ...getCorsHeaders(origin),
       },
       body: JSON.stringify({ 
         error: "Failed to fetch room",

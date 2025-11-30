@@ -24,6 +24,14 @@ export interface RoomData {
     votes: Record<string, { estimate: string; votedAt: string }>;
     revealed: boolean;
   };
+  previousEstimates?: Array<{
+    story_id: string;
+    story_title: string;
+    votes: Record<string, { estimate: string; votedAt: string }>;
+    revealed: boolean;
+    outcome?: string;
+    completedAt?: string;
+  }>;
 }
 
 export async function getRoomData(
@@ -90,6 +98,7 @@ export async function getRoomData(
     name: metadataResult.Item.name,
     participants,
     currentEstimate,
+    previousEstimates: metadataResult.Item.previousEstimates || [],
   };
 }
 
