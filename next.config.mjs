@@ -1,8 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Only use static export for S3/CircleCI builds
-  // Vercel handles dynamic routing natively, so we skip static export for Vercel
-  output: process.env.VERCEL ? undefined : (process.env.NODE_ENV === 'production' ? 'export' : undefined),
+  // Vercel handles dynamic routing natively with SSR/ISR
   trailingSlash: true,
   typescript: {
     ignoreBuildErrors: true,

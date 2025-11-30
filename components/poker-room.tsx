@@ -75,25 +75,26 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
     }
   }, [roomId])
 
-  // Auto-join if name exists in localStorage for this room
+  // Auto-join if name exists in localStorage for this room (only on mount)
   useEffect(() => {
-    // Only attempt auto-join once
+    // Only attempt auto-join once on mount
     if (autoJoinAttemptedRef.current || hasJoined || isJoining) return
     
-    const savedName = userName.trim()
-    if (savedName) {
+    // Check localStorage for saved name (not the userName state which changes as user types)
+    const savedName = localStorage.getItem(`scrumpoker-name-${roomId}`)
+    if (savedName && savedName.trim()) {
       autoJoinAttemptedRef.current = true
       setIsJoining(true)
       
       // Auto-join with saved name
       const autoJoin = async () => {
         try {
-          const { participantId: newParticipantId } = await joinRoom(roomId, { name: savedName })
+          const { participantId: newParticipantId } = await joinRoom(roomId, { name: savedName.trim() })
           setParticipantId(newParticipantId)
 
           const newParticipant: Participant = {
             id: newParticipantId,
-            name: savedName,
+            name: savedName.trim(),
             voted: false,
           }
           setParticipants([newParticipant])
@@ -112,7 +113,8 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
       }
       autoJoin()
     }
-  }, [roomId, hasJoined, isJoining, userName, fetchRoomData])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId]) // Only run on mount or when roomId changes
 
   useEffect(() => {
     // Set up WebSocket connection (only after joining)

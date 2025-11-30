@@ -160,43 +160,6 @@ Resources:
         MaxAge: 3600
 
   # ============================================================================
-  # S3 BUCKET - Static Website Hosting
-  # ============================================================================
-  FrontendBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub scrumpoker-frontend-${Environment}
-      WebsiteConfiguration:
-        IndexDocument: index.html
-        ErrorDocument: index.html
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: false
-        BlockPublicPolicy: false
-        IgnorePublicAcls: false
-        RestrictPublicBuckets: false
-      Tags:
-        - Key: Environment
-          Value: !Ref Environment
-        - Key: Service
-          Value: scrumpoker
-
-  FrontendBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    DependsOn: FrontendBucket
-    Properties:
-      Bucket: !Ref FrontendBucket
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: PublicReadGetObject
-            Effect: Allow
-            Principal: '*'
-            Action: 's3:GetObject'
-            Resource: !Sub 
-              - 'arn:aws:s3:::${BucketName}/*'
-              - BucketName: !Ref FrontendBucket
-
-  # ============================================================================
   # WEBSOCKET API GATEWAY
   # ============================================================================
   WebSocketApi:
@@ -436,16 +399,4 @@ Outputs:
     Value: !Ref ConnectionsTable
     Export:
       Name: !Sub scrumpoker-connections-table-${Environment}
-
-  FrontendWebsiteUrl:
-    Description: Frontend S3 Website URL
-    Value: !Sub 'http://${FrontendBucket}.s3-website-${AWS::Region}.amazonaws.com'
-    Export:
-      Name: !Sub scrumpoker-frontend-website-url-${Environment}
-
-  FrontendBucketName:
-    Description: Frontend S3 Bucket Name
-    Value: !Ref FrontendBucket
-    Export:
-      Name: !Sub scrumpoker-frontend-bucket-${Environment}
 
