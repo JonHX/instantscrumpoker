@@ -163,7 +163,7 @@ Resources:
           - Content-Type
           - Authorization
           - X-Requested-With
-        AllowCredentials: false
+        AllowCredentials: true
         ExposeHeaders:
           - Content-Length
           - Content-Type
