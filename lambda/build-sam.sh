@@ -19,17 +19,33 @@ npm ci
 
 # Build TypeScript to temporary directory
 echo "🔨 Compiling TypeScript..."
-# Use --outDir flag instead of modifying tsconfig
-npx tsc --outDir ./ts-build
+npx tsc
 
 # Copy compiled JavaScript files
 echo "📋 Copying compiled files..."
 if [ -d "$TS_BUILD_DIR/handlers" ]; then
   cp -r "$TS_BUILD_DIR/handlers" "$LAMBDA_PACKAGE/"
+  echo "✅ Copied handlers directory"
+else
+  echo "❌ ERROR: handlers directory not found in $TS_BUILD_DIR"
+  ls -la "$TS_BUILD_DIR" || echo "ts-build directory does not exist"
+  exit 1
 fi
 if [ -d "$TS_BUILD_DIR/lib" ]; then
   cp -r "$TS_BUILD_DIR/lib" "$LAMBDA_PACKAGE/"
+  echo "✅ Copied lib directory"
+else
+  echo "❌ ERROR: lib directory not found in $TS_BUILD_DIR"
+  exit 1
 fi
+
+# Verify handler files exist
+echo "🔍 Verifying handler files..."
+if [ ! -f "$LAMBDA_PACKAGE/handlers/createRoom.js" ]; then
+  echo "❌ ERROR: handlers/createRoom.js not found"
+  exit 1
+fi
+echo "✅ Handler files verified"
 
 # Copy package.json for production dependencies
 echo "📋 Copying package.json..."
