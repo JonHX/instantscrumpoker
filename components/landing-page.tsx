@@ -110,6 +110,25 @@ export function LandingPage({ onCreateRoom, onJoinRoom }: LandingPageProps) {
             </p>
           </div>
 
+          {/* Features Grid */}
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="p-4 rounded-lg bg-card border border-border space-y-1">
+              <div className="text-xl">⚡</div>
+              <h3 className="font-semibold text-foreground text-sm">Instant Setup</h3>
+              <p className="text-xs text-muted-foreground">No configuration needed</p>
+            </div>
+            <div className="p-4 rounded-lg bg-card border border-border space-y-1">
+              <div className="text-xl">👥</div>
+              <h3 className="font-semibold text-foreground text-sm">Real-time Sync</h3>
+              <p className="text-xs text-muted-foreground">See votes instantly</p>
+            </div>
+            <div className="p-4 rounded-lg bg-card border border-border space-y-1">
+              <div className="text-xl">🎯</div>
+              <h3 className="font-semibold text-foreground text-sm">Built for Teams</h3>
+              <p className="text-xs text-muted-foreground">Unlimited participants</p>
+            </div>
+          </div>
+
           {/* Create Room Card */}
           <Card className="bg-card border-border p-8 space-y-6">
             <div className="space-y-3">
