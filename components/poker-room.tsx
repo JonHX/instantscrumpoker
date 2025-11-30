@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
@@ -46,20 +46,68 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const wsRef = useRef<WebSocket | null>(null)
 
-  // Load saved name for this room from localStorage
-  useEffect(() => {
-    const savedName = localStorage.getItem(`scrumpoker-name-${roomId}`)
-    if (savedName) {
-      setUserName(savedName)
+  const fetchRoomData = useCallback(async () => {
+    try {
+      setIsLoadingRoom(true)
+      const data = await getRoom(roomId)
+      setRoomName(data.name)
+
+      // Map participants from room data to include vote status
+      if (data.participants) {
+        const mappedParticipants = data.participants.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          voted: !!p.vote,
+          vote: p.vote,
+        }))
+        setParticipants(mappedParticipants)
+      }
+    } catch (error) {
+      console.error("Error fetching room data:", error)
+    } finally {
+      setIsLoadingRoom(false)
     }
   }, [roomId])
 
+  // Auto-join if name exists in localStorage for this room
   useEffect(() => {
-    // Load room data in background (non-blocking)
-    fetchRoomData()
+    const savedName = localStorage.getItem(`scrumpoker-name-${roomId}`)
+    if (savedName && savedName.trim() && !hasJoined) {
+      setUserName(savedName)
+      // Auto-join with saved name
+      const autoJoin = async () => {
+        try {
+          const { participantId: newParticipantId } = await joinRoom(roomId, { name: savedName.trim() })
+          setParticipantId(newParticipantId)
 
-    // Set up WebSocket connection
-    if (WS_ENDPOINT && roomId) {
+          const newParticipant: Participant = {
+            id: newParticipantId,
+            name: savedName.trim(),
+            voted: false,
+          }
+          setParticipants([newParticipant])
+          setHasJoined(true)
+          
+          // Fetch room data
+          await fetchRoomData()
+        } catch (error) {
+          console.error("Error auto-joining room:", error)
+          // If auto-join fails, clear the saved name and show join screen
+          localStorage.removeItem(`scrumpoker-name-${roomId}`)
+        }
+      }
+      autoJoin()
+    }
+  }, [roomId, hasJoined, fetchRoomData])
+
+  useEffect(() => {
+    // Load room data in background (non-blocking) if not auto-joining
+    if (!hasJoined) {
+      fetchRoomData()
+    }
+
+    // Set up WebSocket connection (only after joining)
+    if (WS_ENDPOINT && roomId && hasJoined) {
       const connectWebSocket = () => {
         try {
           const ws = new WebSocket(WS_ENDPOINT)
@@ -117,30 +165,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
         }
       }
     }
-  }, [roomId])
-
-  const fetchRoomData = async () => {
-    try {
-      setIsLoadingRoom(true)
-      const data = await getRoom(roomId)
-      setRoomName(data.name)
-
-      // Map participants from room data to include vote status
-      if (data.participants) {
-        const mappedParticipants = data.participants.map((p: any) => ({
-          id: p.id,
-          name: p.name,
-          voted: !!p.vote,
-          vote: p.vote,
-        }))
-        setParticipants(mappedParticipants)
-      }
-    } catch (error) {
-      console.error("Error fetching room data:", error)
-    } finally {
-      setIsLoadingRoom(false)
-    }
-  }
+  }, [roomId, hasJoined, fetchRoomData])
 
   const getVoteStats = () => {
     const votes = participants.filter((p) => p.vote && p.vote !== "?").map((p) => p.vote)
@@ -292,9 +317,9 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
           </div>
 
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Room Code</p>
+            <p className="text-sm text-muted-foreground">Room ID</p>
             <p className="font-mono text-accent text-sm break-all font-bold text-lg">
-              {roomId.split("-").pop()?.toUpperCase() || roomId.slice(-4).toUpperCase()}
+              {roomId}
             </p>
             {isLoadingRoom && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
