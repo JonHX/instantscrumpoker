@@ -2,6 +2,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { docClient, calculateTTL } from "../lib/dynamodb";
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
 import { generateRoomId } from "../lib/roomIdGenerator";
+import { checkRateLimit, createRateLimitResponse } from "../lib/rateLimit";
 
 const TABLE_NAME = process.env.ROOMS_TABLE || process.env.TABLE_NAME || "";
 
@@ -9,6 +10,11 @@ export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   try {
+    // Check rate limit
+    const allowed = await checkRateLimit(event);
+    if (!allowed) {
+      return createRateLimitResponse();
+    }
     const body = JSON.parse(event.body || "{}");
     const { name } = body;
 
