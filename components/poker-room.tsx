@@ -12,7 +12,7 @@ import { ConfettiCannon } from "./confetti-cannon"
 import { ShareModal } from "./share-modal"
 import { Zap, LogOut, MessageSquare, Moon, Sun, Share2 } from "lucide-react"
 import { WS_ENDPOINT } from "@/lib/api-config"
-import { getRoom, joinRoom, submitVote, revealVotes } from "@/lib/api"
+import { getRoom, joinRoom, submitVote, revealVotes, nextEstimate } from "@/lib/api"
 
 const FIBONACCI = ["1", "2", "3", "5", "8", "13", "21", "34", "?"]
 
@@ -51,6 +51,14 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
   const [showShareModal, setShowShareModal] = useState(false)
   const [roomName, setRoomName] = useState("")
   const [participantId, setParticipantId] = useState<string>("")
+  const [previousEstimates, setPreviousEstimates] = useState<Array<{
+    story_id: string
+    story_title: string
+    votes: Record<string, { estimate: string; votedAt: string }>
+    outcome?: string
+    completedAt?: string
+  }>>([])
+  const [selectedOutcome, setSelectedOutcome] = useState<string>("")
   const audioRef = useRef<HTMLAudioElement>(null)
   const wsRef = useRef<WebSocket | null>(null)
   const autoJoinAttemptedRef = useRef(false)
@@ -70,6 +78,11 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
           vote: p.vote,
         }))
         setParticipants(mappedParticipants)
+      }
+
+      // Load previous estimates if available
+      if ((data as any).previousEstimates) {
+        setPreviousEstimates((data as any).previousEstimates)
       }
     } catch (error) {
       console.error("Error fetching room data:", error)
@@ -147,6 +160,20 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
               } else if (data.type === "reveal") {
                 // Reveal votes for all participants
                 setIsVotingOpen(false)
+              } else if (data.type === "nextEstimate") {
+                // Move to next estimate - reset voting state
+                setCurrentVote(null)
+                setIsVotingOpen(true)
+                setParticipants(participants.map((p) => ({ ...p, vote: undefined, voted: false })))
+                setTimerSeconds(300)
+                setIsTimerRunning(false)
+                setDiscussionMode(false)
+                setShowConfetti(false)
+                setSelectedOutcome("")
+                // If outcome was provided, add to previous estimates
+                if (data.outcome) {
+                  fetchRoomData() // Refresh to get updated previous estimates
+                }
               }
             } catch (error) {
               console.error("Error parsing WebSocket message:", error)
@@ -258,15 +285,21 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
     playSound()
   }
 
-  const handleNextEstimate = () => {
-    setCurrentVote(null)
-    setIsVotingOpen(true)
-    setParticipants(participants.map((p) => ({ ...p, vote: undefined, voted: false })))
-    setTimerSeconds(300)
-    setIsTimerRunning(false)
-    setDiscussionMode(false)
-    setShowConfetti(false)
-    playSound()
+  const handleNextEstimate = async () => {
+    if (!selectedOutcome) {
+      alert("Please select an outcome for the current estimate before proceeding")
+      return
+    }
+
+    try {
+      // Call API to broadcast next estimate to all participants
+      await nextEstimate(roomId, { outcome: selectedOutcome })
+      // Local state update will happen via WebSocket message
+      playSound()
+    } catch (error) {
+      console.error("Error moving to next estimate:", error)
+      alert(error instanceof Error ? error.message : "Failed to move to next estimate")
+    }
   }
 
   const handleRevealVotes = async () => {
@@ -280,7 +313,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
         setShowConfetti(true)
       } else {
         setDiscussionMode(true)
-        setIsTimerRunning(true)
+        setIsTimerRunning(false) // Don't auto-start timer
         setTimerSeconds(180)
       }
       playSound()
@@ -289,10 +322,8 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
     }
   }
 
-  const handleStartDiscussion = () => {
-    setDiscussionMode(true)
+  const handleStartTimer = () => {
     setIsTimerRunning(true)
-    setTimerSeconds(180)
     playSound()
   }
 
@@ -425,6 +456,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
                   isRunning={isTimerRunning}
                   onEnd={playSound}
                   onExtend={handleExtendTimer}
+                  onStart={handleStartTimer}
                 />
               </div>
             </Card>
@@ -498,6 +530,36 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
             )}
           </Card>
 
+          {/* Previous Estimates */}
+          {previousEstimates.length > 0 && (
+            <Card className="bg-card border-border p-6 space-y-4">
+              <h3 className="text-base font-bold text-foreground">Previous Estimates</h3>
+              <div className="space-y-2">
+                {previousEstimates.map((estimate, index) => (
+                  <div
+                    key={estimate.story_id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-secondary border border-border"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-bold text-accent">#{previousEstimates.length - index}</span>
+                      <span className="text-sm text-foreground">{estimate.story_title}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {Object.entries(estimate.votes || {}).map(([pid, vote]: [string, any]) => (
+                        <span key={pid} className="text-xs text-muted-foreground">
+                          {vote.estimate}
+                        </span>
+                      ))}
+                      {estimate.outcome && (
+                        <span className="font-bold text-accent ml-2">→ {estimate.outcome}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-3">
             {isVotingOpen && currentVote && (
@@ -511,31 +573,46 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
 
             {!isVotingOpen && !isCleanSweep && (
               <>
-                <Button
-                  onClick={handleStartDiscussion}
-                  disabled={discussionMode}
-                  variant="outline"
-                  className="flex-1 flex items-center justify-center gap-2 border-border text-foreground hover:bg-secondary bg-transparent"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  Discuss
-                </Button>
-                <Button
-                  onClick={handleNextEstimate}
-                  className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6"
-                >
-                  Next Estimate
-                </Button>
+                {!discussionMode && (
+                  <Button
+                    onClick={() => setDiscussionMode(true)}
+                    variant="outline"
+                    className="flex-1 flex items-center justify-center gap-2 border-border text-foreground hover:bg-secondary bg-transparent"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    Start Discussion
+                  </Button>
+                )}
               </>
             )}
 
-            {isCleanSweep && (
-              <Button
-                onClick={handleNextEstimate}
-                className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6"
-              >
-                Next Estimate
-              </Button>
+            {(!isVotingOpen || isCleanSweep) && (
+              <Card className="bg-card border-border p-6 space-y-4">
+                <h3 className="text-base font-bold text-foreground">Select Final Outcome</h3>
+                <p className="text-sm text-muted-foreground">Choose the final estimate value before proceeding to the next round</p>
+                <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+                  {FIBONACCI.map((value) => (
+                    <button
+                      key={value}
+                      onClick={() => setSelectedOutcome(value)}
+                      className={`p-3 rounded-lg border-2 font-bold text-lg transition-all ${
+                        selectedOutcome === value
+                          ? "bg-accent border-accent text-accent-foreground ring-2 ring-accent/30"
+                          : "bg-secondary border-border text-foreground hover:border-accent/50"
+                      }`}
+                    >
+                      {value}
+                    </button>
+                  ))}
+                </div>
+                <Button
+                  onClick={handleNextEstimate}
+                  disabled={!selectedOutcome}
+                  className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next Estimate
+                </Button>
+              </Card>
             )}
           </div>
         </div>

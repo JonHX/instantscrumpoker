@@ -46,6 +46,14 @@ export interface RevealVotesResponse {
   success: boolean
 }
 
+export interface NextEstimateRequest {
+  outcome?: string
+}
+
+export interface NextEstimateResponse {
+  success: boolean
+}
+
 /**
  * Create a new room
  */
@@ -132,6 +140,24 @@ export async function revealVotes(roomId: string): Promise<RevealVotesResponse> 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: "Failed to reveal votes" }))
     throw new Error(error.error || "Failed to reveal votes")
+  }
+
+  return response.json()
+}
+
+/**
+ * Move to next estimate round
+ */
+export async function nextEstimate(roomId: string, data?: NextEstimateRequest): Promise<NextEstimateResponse> {
+  const response = await fetch(`${getApiUrl()}/rooms/${roomId}/next`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data || {}),
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "Failed to move to next estimate" }))
+    throw new Error(error.error || "Failed to move to next estimate")
   }
 
   return response.json()

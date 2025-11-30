@@ -342,6 +342,34 @@ Resources:
         Environment: !Ref Environment
         Service: scrumpoker
 
+  NextEstimateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub scrumpoker-next-estimate-${Environment}
+      Handler: handlers/nextEstimate.handler
+      CodeUri: ./lambda-build/
+      Description: Move to next estimate round
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          WS_ENDPOINT: !Sub 'wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
+      Events:
+        HttpApiEventPost:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /api/rooms/{roomId}/next
+            Method: post
+        HttpApiEventOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /api/rooms/{roomId}/next
+            Method: options
+      Tags:
+        Environment: !Ref Environment
+        Service: scrumpoker
+
   # ============================================================================
   # LAMBDA FUNCTIONS - WebSocket Handlers
   # ============================================================================

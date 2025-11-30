@@ -9,9 +9,10 @@ interface TimerProps {
   isRunning: boolean
   onEnd: () => void
   onExtend?: () => void
+  onStart?: () => void
 }
 
-export function Timer({ seconds, isRunning, onEnd, onExtend }: TimerProps) {
+export function Timer({ seconds, isRunning, onEnd, onExtend, onStart }: TimerProps) {
   const [timeLeft, setTimeLeft] = useState(seconds)
 
   useEffect(() => {
@@ -46,17 +47,28 @@ export function Timer({ seconds, isRunning, onEnd, onExtend }: TimerProps) {
           {String(minutes).padStart(2, "0")}:{String(secs).padStart(2, "0")}
         </div>
       </div>
-      {onExtend && (
-        <Button
-          onClick={onExtend}
-          size="sm"
-          variant="outline"
-          className="flex items-center gap-2 border-border text-muted-foreground hover:text-foreground bg-transparent"
-        >
-          <Plus className="w-4 h-4" />
-          Extend +1m
-        </Button>
-      )}
+      <div className="flex gap-2">
+        {!isRunning && onStart && (
+          <Button
+            onClick={onStart}
+            size="sm"
+            className="bg-accent hover:bg-accent/90 text-accent-foreground"
+          >
+            Start Timer
+          </Button>
+        )}
+        {isRunning && onExtend && (
+          <Button
+            onClick={onExtend}
+            size="sm"
+            variant="outline"
+            className="flex items-center gap-2 border-border text-muted-foreground hover:text-foreground bg-transparent"
+          >
+            <Plus className="w-4 h-4" />
+            Extend +1m
+          </Button>
+        )}
+      </div>
     </div>
   )
 }
