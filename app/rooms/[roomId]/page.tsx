@@ -1,7 +1,4 @@
-"use client"
-
-import { useRouter } from "next/navigation"
-import { PokerRoom } from "@/components/poker-room"
+import { RoomPageClient } from "./room-page-client"
 
 // Required for static export with dynamic routes
 export function generateStaticParams() {
@@ -11,9 +8,6 @@ export function generateStaticParams() {
 }
 
 export default function RoomPage({ params }: { params: { roomId: string } }) {
-  const router = useRouter()
-  const roomId = params.roomId
-
-  return <PokerRoom roomId={roomId} onExit={() => router.push("/")} />
+  return <RoomPageClient roomId={params.roomId} />
 }
 
