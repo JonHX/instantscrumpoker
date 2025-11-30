@@ -1,12 +1,11 @@
 import { RoomPageClient } from "./room-page-client"
 
-// Required for static export
-// Return at least one param to satisfy static export requirements
-// The actual roomId will be handled client-side at runtime
+// Required for static export with catch-all routes
+// For catch-all routes [...roomId], roomId must be an array
 export async function generateStaticParams() {
-  return [
-    { roomId: ['placeholder'] }
-  ]
+  // Return empty array - all routes will be handled client-side
+  // This satisfies the requirement while allowing any roomId at runtime
+  return []
 }
 
 export default function RoomPage({ params }: { params: { roomId: string[] } }) {
