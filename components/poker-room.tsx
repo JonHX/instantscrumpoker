@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
@@ -376,38 +377,40 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
       />
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
-            <Zap className="w-5 h-5 text-accent-foreground" />
+      <nav className="w-full border-b border-border bg-card/50 backdrop-blur-sm mb-8">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
+            <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
+              <Zap className="w-5 h-5 text-accent-foreground" />
+            </div>
+            <span className="text-lg font-bold text-foreground">InstantScrumPoker</span>
+          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowShareModal(true)}
+              className="p-2 rounded-lg border border-border hover:bg-secondary transition-colors"
+              aria-label="Share room"
+            >
+              <Share2 className="w-4 h-4 text-foreground" />
+            </button>
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg border border-border hover:bg-secondary transition-colors"
+              aria-label="Toggle theme"
+            >
+              {isDark ? <Sun className="w-4 h-4 text-foreground" /> : <Moon className="w-4 h-4 text-foreground" />}
+            </button>
+            <Button
+              onClick={onExit}
+              variant="outline"
+              className="flex items-center gap-2 border-border text-muted-foreground hover:text-foreground bg-transparent"
+            >
+              <LogOut className="w-4 h-4" />
+              Exit
+            </Button>
           </div>
-          <h1 className="text-lg font-bold text-foreground">InstantScrumPoker</h1>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowShareModal(true)}
-            className="p-2 rounded-lg border border-border hover:bg-secondary transition-colors"
-            aria-label="Share room"
-          >
-            <Share2 className="w-4 h-4 text-foreground" />
-          </button>
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-lg border border-border hover:bg-secondary transition-colors"
-            aria-label="Toggle theme"
-          >
-            {isDark ? <Sun className="w-4 h-4 text-foreground" /> : <Moon className="w-4 h-4 text-foreground" />}
-          </button>
-          <Button
-            onClick={onExit}
-            variant="outline"
-            className="flex items-center gap-2 border-border text-muted-foreground hover:text-foreground bg-transparent"
-          >
-            <LogOut className="w-4 h-4" />
-            Exit
-          </Button>
-        </div>
-      </div>
+      </nav>
 
       <div className="grid lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
         {/* Main Content */}

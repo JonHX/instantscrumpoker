@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
@@ -81,12 +82,12 @@ export function LandingPage({ onCreateRoom, onJoinRoom }: LandingPageProps) {
       {/* Top Navigation Bar */}
       <nav className="w-full border-b border-border bg-card/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
             <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
               <Zap className="w-5 h-5 text-accent-foreground" />
             </div>
             <span className="text-lg font-bold text-foreground">InstantScrumPoker</span>
-          </div>
+          </Link>
           <button
             onClick={toggleTheme}
             className="p-2 rounded-lg border border-border hover:bg-secondary transition-colors"
