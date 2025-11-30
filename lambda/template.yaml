@@ -24,7 +24,6 @@ Globals:
         ROOMS_TABLE: !Ref RoomsTable
         TABLE_NAME: !Ref RoomsTable  # Keep for backward compatibility
         CONNECTIONS_TABLE: !Ref ConnectionsTable
-        RATE_LIMIT_TABLE: !Ref RateLimitTable
 
 Resources:
   # ============================================================================
@@ -102,33 +101,6 @@ Resources:
           Value: scrumpoker
 
   # ============================================================================
-  # DYNAMODB TABLE - Rate Limiting
-  # ============================================================================
-  RateLimitTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub scrumpoker-rate-limit-${Environment}
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: PK
-          AttributeType: S
-        - AttributeName: SK
-          AttributeType: S
-      KeySchema:
-        - AttributeName: PK
-          KeyType: HASH
-        - AttributeName: SK
-          KeyType: RANGE
-      TimeToLiveSpecification:
-        AttributeName: expiresAt
-        Enabled: true
-      Tags:
-        - Key: Environment
-          Value: !Ref Environment
-        - Key: Service
-          Value: scrumpoker
-
-  # ============================================================================
   # IAM ROLE - Lambda Execution Role
   # ============================================================================
   LambdaExecutionRole:
@@ -162,8 +134,6 @@ Resources:
                   - !Sub '${RoomsTable.Arn}/index/*'
                   - !GetAtt ConnectionsTable.Arn
                   - !Sub '${ConnectionsTable.Arn}/index/*'
-                  - !GetAtt RateLimitTable.Arn
-                  - !Sub '${RateLimitTable.Arn}/index/*'
               # API Gateway Management API (for WebSocket)
               - Effect: Allow
                 Action:

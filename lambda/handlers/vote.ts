@@ -2,7 +2,6 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { docClient, calculateTTL } from "../lib/dynamodb";
 import { UpdateCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { broadcastToRoom } from "../lib/websocket";
-import { checkRateLimit, createRateLimitResponse } from "../lib/rateLimit";
 
 const TABLE_NAME = process.env.ROOMS_TABLE || process.env.TABLE_NAME || "";
 const WS_ENDPOINT = process.env.WS_ENDPOINT || "";
@@ -11,11 +10,6 @@ export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   try {
-    // Check rate limit
-    const allowed = await checkRateLimit(event);
-    if (!allowed) {
-      return createRateLimitResponse();
-    }
     const roomId = event.pathParameters?.roomId;
     const body = JSON.parse(event.body || "{}");
     const { participantId, estimate } = body;
