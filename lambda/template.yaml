@@ -35,6 +35,9 @@ Globals:
         TABLE_NAME: !Ref RoomsTable  # Keep for backward compatibility
         CONNECTIONS_TABLE: !Ref ConnectionsTable
 
+Conditions:
+  HasCertificate: !Not [!Equals [!Ref CertificateArn, ""]]
+
 Resources:
   # ============================================================================
   # DYNAMODB TABLE - Rooms and Data
@@ -210,13 +213,6 @@ Resources:
       Stage: !Ref Environment
       # ApiMappingKey omitted = empty base path
       # This means https://api.instantscrumpoker.com/api/rooms maps to /api/rooms route
-
-  # Condition to only create Custom Domain if certificate is provided
-  HasCertificate:
-    Fn::Not:
-      - Fn::Equals:
-          - !Ref CertificateArn
-          - ""
 
   # ============================================================================
   # WEBSOCKET API GATEWAY
