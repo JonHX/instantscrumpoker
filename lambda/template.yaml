@@ -220,7 +220,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub scrumpoker-create-room-${Environment}
-      Handler: handlers.createRoom.handler
+      Handler: handlers/createRoom.handler
       CodeUri: ./lambda-build/
       Description: Create a new ScrumPoker room
       Role: !GetAtt LambdaExecutionRole.Arn
@@ -239,7 +239,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub scrumpoker-get-room-${Environment}
-      Handler: handlers.getRoom.handler
+      Handler: handlers/getRoom.handler
       CodeUri: ./lambda-build/
       Description: Get room data
       Role: !GetAtt LambdaExecutionRole.Arn
@@ -258,7 +258,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub scrumpoker-join-room-${Environment}
-      Handler: handlers.joinRoom.handler
+      Handler: handlers/joinRoom.handler
       CodeUri: ./lambda-build/
       Description: Join a room
       Role: !GetAtt LambdaExecutionRole.Arn
@@ -280,7 +280,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub scrumpoker-vote-${Environment}
-      Handler: handlers.vote.handler
+      Handler: handlers/vote.handler
       CodeUri: ./lambda-build/
       Description: Submit a vote
       Role: !GetAtt LambdaExecutionRole.Arn
@@ -305,7 +305,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub scrumpoker-websocket-connect-${Environment}
-      Handler: handlers.websocket.connect.handler
+      Handler: handlers/websocket/connect.handler
       CodeUri: ./lambda-build/
       Description: WebSocket connection handler
       Role: !GetAtt LambdaExecutionRole.Arn
@@ -317,7 +317,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub scrumpoker-websocket-disconnect-${Environment}
-      Handler: handlers.websocket.disconnect.handler
+      Handler: handlers/websocket/disconnect.handler
       CodeUri: ./lambda-build/
       Description: WebSocket disconnection handler
       Role: !GetAtt LambdaExecutionRole.Arn
@@ -329,7 +329,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub scrumpoker-websocket-default-${Environment}
-      Handler: handlers.websocket.default.handler
+      Handler: handlers/websocket/default.handler
       CodeUri: ./lambda-build/
       Description: WebSocket message handler
       Role: !GetAtt LambdaExecutionRole.Arn
