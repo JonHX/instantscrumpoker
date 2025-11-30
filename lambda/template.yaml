@@ -168,7 +168,7 @@ Resources:
       BucketName: !Sub scrumpoker-frontend-${Environment}
       WebsiteConfiguration:
         IndexDocument: index.html
-        ErrorDocument: 404.html
+        ErrorDocument: index.html
       PublicAccessBlockConfiguration:
         BlockPublicAcls: false
         BlockPublicPolicy: false

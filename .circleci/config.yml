@@ -122,14 +122,15 @@ jobs:
                 --exclude "*" \
                 --include "*.html" \
                 --include "*.json"
-              # Configure S3 bucket website error document to use 404.html for client-side routing
-              echo "Configuring S3 bucket website error document..."
+              # Configure S3 bucket website to serve index.html for all routes (SPA pattern)
+              # This allows Next.js client-side routing to handle all routes
+              echo "Configuring S3 bucket website for SPA routing..."
               aws s3api put-bucket-website \
                 --bucket "$S3_BUCKET" \
                 --region ${AWS_DEFAULT_REGION:-eu-west-1} \
                 --website-configuration "{
                   \"IndexDocument\": {\"Suffix\": \"index.html\"},
-                  \"ErrorDocument\": {\"Key\": \"404.html\"}
+                  \"ErrorDocument\": {\"Key\": \"index.html\"}
                 }" || echo "Warning: Could not update bucket website configuration (may need manual update)"
               echo "Frontend uploaded successfully!"
               echo "Website URL: http://$S3_BUCKET.s3-website-${AWS_DEFAULT_REGION:-eu-west-1}.amazonaws.com"
