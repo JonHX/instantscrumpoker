@@ -208,7 +208,8 @@ Resources:
       ApiId: !Ref HttpApi
       DomainName: !Ref ApiDomainName
       Stage: !Ref Environment
-      ApiMappingKey: api  # Base path mapping - /api prefix
+      # ApiMappingKey omitted = empty base path
+      # This means https://api.instantscrumpoker.com/api/rooms maps to /api/rooms route
 
   # Condition to only create Custom Domain if certificate is provided
   HasCertificate:
