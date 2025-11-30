@@ -1,0 +1,10 @@
+{
+  "trailingSlash": true,
+  "rewrites": [
+    {
+      "source": "/rooms/:roomId",
+      "destination": "/rooms/[roomId]/"
+    }
+  ]
+}
+
