@@ -12,6 +12,7 @@ import { ShareModal } from "./share-modal"
 import { Zap, LogOut, MessageSquare, Moon, Sun, Share2 } from "lucide-react"
 import { WS_ENDPOINT } from "@/lib/api-config"
 import { getRoom, joinRoom, submitVote } from "@/lib/api"
+import { PokerRoomSkeleton } from "./poker-room-skeleton"
 
 const FIBONACCI = ["1", "2", "3", "5", "8", "13", "21", "34", "?"]
 
@@ -41,6 +42,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
   const [showShareModal, setShowShareModal] = useState(false)
   const [roomName, setRoomName] = useState("")
   const [participantId, setParticipantId] = useState<string>("")
+  const [isLoading, setIsLoading] = useState(true)
   const audioRef = useRef<HTMLAudioElement>(null)
   const wsRef = useRef<WebSocket | null>(null)
 
@@ -111,6 +113,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
 
   const fetchRoomData = async () => {
     try {
+      setIsLoading(true)
       const data = await getRoom(roomId)
       setRoomName(data.name)
 
@@ -126,6 +129,8 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
       }
     } catch (error) {
       console.error("Error fetching room data:", error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -250,6 +255,11 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
       audioRef.current.currentTime = 0
       audioRef.current.play().catch(() => {})
     }
+  }
+
+  // Show skeleton while loading room data
+  if (isLoading && !hasJoined) {
+    return <PokerRoomSkeleton />
   }
 
   if (!hasJoined) {

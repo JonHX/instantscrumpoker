@@ -1,20 +1,25 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { RoomPageClient } from "@/app/rooms/[roomId]/room-page-client"
+import { PokerRoomSkeleton } from "@/components/poker-room-skeleton"
 
 export default function NotFound() {
   const router = useRouter()
   const pathname = usePathname()
+  const [showSkeleton, setShowSkeleton] = useState(true)
 
   useEffect(() => {
     // Extract roomId from pathname if it's a room route
     const roomMatch = pathname?.match(/^\/rooms\/([^\/]+)/)
     if (roomMatch) {
-      // This is a room route that wasn't statically generated
-      // The RoomPageClient will handle it client-side
-      return
+      // This is a room route - show skeleton immediately, then load room
+      // Hide skeleton after component mounts to allow smooth transition
+      const timer = setTimeout(() => {
+        setShowSkeleton(false)
+      }, 50)
+      return () => clearTimeout(timer)
     }
     
     // For other 404s, redirect to home after a moment
@@ -26,11 +31,16 @@ export default function NotFound() {
     }
   }, [pathname, router])
 
-  // If this is a room route, render the room component client-side
+  // If this is a room route, show skeleton then room component
   const roomMatch = pathname?.match(/^\/rooms\/([^\/]+)/)
   if (roomMatch) {
     const roomId = roomMatch[1]
-    return <RoomPageClient roomId={roomId} />
+    return (
+      <>
+        {showSkeleton && <PokerRoomSkeleton />}
+        {!showSkeleton && <RoomPageClient roomId={roomId} />}
+      </>
+    )
   }
 
   return (
