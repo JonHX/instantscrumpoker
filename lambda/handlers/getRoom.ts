@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { getRoomData } from "../lib/dynamodb";
 
-const TABLE_NAME = process.env.TABLE_NAME || "";
+const TABLE_NAME = process.env.ROOMS_TABLE || process.env.TABLE_NAME || "";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -55,13 +55,19 @@ export const handler = async (
     };
   } catch (error) {
     console.error("Error fetching room:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
     return {
       statusCode: 500,
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
       },
-      body: JSON.stringify({ error: "Failed to fetch room" }),
+      body: JSON.stringify({ 
+        error: "Failed to fetch room",
+        message: errorMessage,
+        stack: process.env.NODE_ENV === "development" ? errorStack : undefined,
+      }),
     };
   }
 };

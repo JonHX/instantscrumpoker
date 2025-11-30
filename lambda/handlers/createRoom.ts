@@ -3,7 +3,7 @@ import { docClient, calculateTTL } from "../lib/dynamodb";
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
 import { generateRoomId } from "../lib/roomIdGenerator";
 
-const TABLE_NAME = process.env.TABLE_NAME || "";
+const TABLE_NAME = process.env.ROOMS_TABLE || process.env.TABLE_NAME || "";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -54,13 +54,19 @@ export const handler = async (
     };
   } catch (error) {
     console.error("Error creating room:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
     return {
       statusCode: 500,
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
       },
-      body: JSON.stringify({ error: "Failed to create room" }),
+      body: JSON.stringify({ 
+        error: "Failed to create room",
+        message: errorMessage,
+        stack: process.env.NODE_ENV === "development" ? errorStack : undefined,
+      }),
     };
   }
 };

@@ -21,7 +21,8 @@ Globals:
       - x86_64
     Environment:
       Variables:
-        TABLE_NAME: !Ref RoomsTable
+        ROOMS_TABLE: !Ref RoomsTable
+        TABLE_NAME: !Ref RoomsTable  # Keep for backward compatibility
         CONNECTIONS_TABLE: !Ref ConnectionsTable
 
 Resources:

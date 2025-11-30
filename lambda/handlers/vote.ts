@@ -3,7 +3,7 @@ import { docClient, calculateTTL } from "../lib/dynamodb";
 import { UpdateCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { broadcastToRoom } from "../lib/websocket";
 
-const TABLE_NAME = process.env.TABLE_NAME || "";
+const TABLE_NAME = process.env.ROOMS_TABLE || process.env.TABLE_NAME || "";
 const WS_ENDPOINT = process.env.WS_ENDPOINT || "";
 
 export const handler = async (
@@ -109,13 +109,19 @@ export const handler = async (
     };
   } catch (error) {
     console.error("Error submitting vote:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
     return {
       statusCode: 500,
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
       },
-      body: JSON.stringify({ error: "Failed to submit vote" }),
+      body: JSON.stringify({ 
+        error: "Failed to submit vote",
+        message: errorMessage,
+        stack: process.env.NODE_ENV === "development" ? errorStack : undefined,
+      }),
     };
   }
 };
