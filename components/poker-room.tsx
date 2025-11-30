@@ -34,8 +34,17 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
   const [timerSeconds, setTimerSeconds] = useState(300)
   const [isTimerRunning, setIsTimerRunning] = useState(false)
   const [discussionMode, setDiscussionMode] = useState(false)
-  const [userName, setUserName] = useState("")
+  // Check localStorage synchronously on mount
+  const getSavedName = () => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(`scrumpoker-name-${roomId}`)
+      return saved && saved.trim() ? saved.trim() : ""
+    }
+    return ""
+  }
+  const [userName, setUserName] = useState(getSavedName)
   const [hasJoined, setHasJoined] = useState(false)
+  const [isJoining, setIsJoining] = useState(false)
   const [isDark, setIsDark] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
@@ -43,6 +52,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
   const [participantId, setParticipantId] = useState<string>("")
   const audioRef = useRef<HTMLAudioElement>(null)
   const wsRef = useRef<WebSocket | null>(null)
+  const autoJoinAttemptedRef = useRef(false)
 
   const fetchRoomData = useCallback(async () => {
     try {
@@ -67,18 +77,23 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
 
   // Auto-join if name exists in localStorage for this room
   useEffect(() => {
-    const savedName = localStorage.getItem(`scrumpoker-name-${roomId}`)
-    if (savedName && savedName.trim() && !hasJoined) {
-      setUserName(savedName)
+    // Only attempt auto-join once
+    if (autoJoinAttemptedRef.current || hasJoined || isJoining) return
+    
+    const savedName = userName.trim()
+    if (savedName) {
+      autoJoinAttemptedRef.current = true
+      setIsJoining(true)
+      
       // Auto-join with saved name
       const autoJoin = async () => {
         try {
-          const { participantId: newParticipantId } = await joinRoom(roomId, { name: savedName.trim() })
+          const { participantId: newParticipantId } = await joinRoom(roomId, { name: savedName })
           setParticipantId(newParticipantId)
 
           const newParticipant: Participant = {
             id: newParticipantId,
-            name: savedName.trim(),
+            name: savedName,
             voted: false,
           }
           setParticipants([newParticipant])
@@ -90,18 +105,16 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
           console.error("Error auto-joining room:", error)
           // If auto-join fails, clear the saved name and show join screen
           localStorage.removeItem(`scrumpoker-name-${roomId}`)
+          setUserName("")
+        } finally {
+          setIsJoining(false)
         }
       }
       autoJoin()
     }
-  }, [roomId, hasJoined, fetchRoomData])
+  }, [roomId, hasJoined, isJoining, userName, fetchRoomData])
 
   useEffect(() => {
-    // Load room data in background (non-blocking) if not auto-joining
-    if (!hasJoined) {
-      fetchRoomData()
-    }
-
     // Set up WebSocket connection (only after joining)
     if (WS_ENDPOINT && roomId && hasJoined) {
       const connectWebSocket = () => {
@@ -164,7 +177,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
   }, [roomId, hasJoined, fetchRoomData])
 
   const getVoteStats = () => {
-    const votes = participants.filter((p) => p.vote && p.vote !== "?").map((p) => p.vote)
+    const votes = participants.filter((p) => p.vote && p.vote !== "?").map((p) => p.vote!)
     const voteCounts = votes.reduce(
       (acc, vote) => {
         acc[vote] = (acc[vote] || 0) + 1
@@ -197,30 +210,32 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
   }
 
   const handleJoin = async () => {
-    if (userName.trim() && !hasJoined) {
-      try {
-        // Save name to localStorage for this room
-        localStorage.setItem(`scrumpoker-name-${roomId}`, userName.trim())
-        
-        const { participantId: newParticipantId } = await joinRoom(roomId, { name: userName.trim() })
-        setParticipantId(newParticipantId)
+    // Prevent multiple simultaneous join attempts
+    if (!userName.trim() || hasJoined || isJoining) return
+    
+    setIsJoining(true)
+    try {
+      // Save name to localStorage for this room
+      localStorage.setItem(`scrumpoker-name-${roomId}`, userName.trim())
+      
+      const { participantId: newParticipantId } = await joinRoom(roomId, { name: userName.trim() })
+      setParticipantId(newParticipantId)
 
-        const newParticipant: Participant = {
-          id: newParticipantId,
-          name: userName.trim(),
-          voted: false,
-        }
-        setParticipants([...participants, newParticipant])
-        setHasJoined(true)
-
-        // Fetch room name if not already loaded
-        if (!roomName) {
-          await fetchRoomData()
-        }
-      } catch (error) {
-        console.error("Error joining room:", error)
-        alert(error instanceof Error ? error.message : "Failed to join room")
+      const newParticipant: Participant = {
+        id: newParticipantId,
+        name: userName.trim(),
+        voted: false,
       }
+      setParticipants([...participants, newParticipant])
+      setHasJoined(true)
+
+      // Fetch room data after joining
+      await fetchRoomData()
+    } catch (error) {
+      console.error("Error joining room:", error)
+      alert(error instanceof Error ? error.message : "Failed to join room")
+    } finally {
+      setIsJoining(false)
     }
   }
 
@@ -321,10 +336,10 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
 
           <Button
             onClick={handleJoin}
-            disabled={!userName.trim() || hasJoined}
+            disabled={!userName.trim() || hasJoined || isJoining}
             className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6"
           >
-            Join Estimation
+            {isJoining ? "Joining..." : "Join Estimation"}
           </Button>
         </Card>
         <audio
