@@ -9,3 +9,4 @@ export function RoomPageClient({ roomId }: { roomId: string }) {
   return <PokerRoom roomId={roomId} onExit={() => router.push("/")} />
 }
 
+
