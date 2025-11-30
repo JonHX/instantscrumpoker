@@ -1,13 +1,13 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 import { getRoomData } from "../lib/dynamodb";
 
 const TABLE_NAME = process.env.ROOMS_TABLE || process.env.TABLE_NAME || "";
 
 export const handler = async (
-  event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> => {
+  event: APIGatewayProxyEventV2
+): Promise<APIGatewayProxyResultV2> => {
   // Handle OPTIONS preflight request
-  if (event.httpMethod === 'OPTIONS') {
+  if (event.requestContext.http.method === 'OPTIONS') {
     return {
       statusCode: 200,
       headers: {

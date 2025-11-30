@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 import { docClient, calculateTTL } from "../lib/dynamodb";
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
 import { generateRoomId } from "../lib/roomIdGenerator";
@@ -6,10 +6,10 @@ import { generateRoomId } from "../lib/roomIdGenerator";
 const TABLE_NAME = process.env.ROOMS_TABLE || process.env.TABLE_NAME || "";
 
 export const handler = async (
-  event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> => {
+  event: APIGatewayProxyEventV2
+): Promise<APIGatewayProxyResultV2> => {
   // Handle OPTIONS preflight request
-  if (event.httpMethod === 'OPTIONS') {
+  if (event.requestContext.http.method === 'OPTIONS') {
     return {
       statusCode: 200,
       headers: {
@@ -23,7 +23,7 @@ export const handler = async (
   }
 
   try {
-    const body = JSON.parse(event.body || "{}");
+    const body = event.body ? JSON.parse(event.body) : {};
     const { name } = body;
 
     if (!name || typeof name !== "string" || name.trim().length === 0) {
