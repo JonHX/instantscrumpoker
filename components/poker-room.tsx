@@ -11,7 +11,7 @@ import { ConfettiCannon } from "./confetti-cannon"
 import { ShareModal } from "./share-modal"
 import { Zap, LogOut, MessageSquare, Moon, Sun, Share2 } from "lucide-react"
 import { WS_ENDPOINT } from "@/lib/api-config"
-import { getRoom, joinRoom, submitVote } from "@/lib/api"
+import { getRoom, joinRoom, submitVote, revealVotes } from "@/lib/api"
 
 const FIBONACCI = ["1", "2", "3", "5", "8", "13", "21", "34", "?"]
 
@@ -143,6 +143,9 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
               } else if (data.type === "join") {
                 // Refresh room data when someone joins
                 fetchRoomData()
+              } else if (data.type === "reveal") {
+                // Reveal votes for all participants
+                setIsVotingOpen(false)
               }
             } catch (error) {
               console.error("Error parsing WebSocket message:", error)
@@ -265,17 +268,24 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
     playSound()
   }
 
-  const handleRevealVotes = () => {
-    setIsVotingOpen(false)
-    const { isCleanSweep } = getVoteStats()
-    if (isCleanSweep) {
-      setShowConfetti(true)
-    } else {
-      setDiscussionMode(true)
-      setIsTimerRunning(true)
-      setTimerSeconds(180)
+  const handleRevealVotes = async () => {
+    try {
+      // Call API to broadcast reveal to all participants
+      await revealVotes(roomId)
+      // Local state update will happen via WebSocket message
+      setIsVotingOpen(false)
+      const { isCleanSweep } = getVoteStats()
+      if (isCleanSweep) {
+        setShowConfetti(true)
+      } else {
+        setDiscussionMode(true)
+        setIsTimerRunning(true)
+        setTimerSeconds(180)
+      }
+      playSound()
+    } catch (error) {
+      console.error("Error revealing votes:", error)
     }
-    playSound()
   }
 
   const handleStartDiscussion = () => {

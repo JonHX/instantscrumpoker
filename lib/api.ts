@@ -1,13 +1,4 @@
-// Centralized API client for ScrumPoker Lambda backend
-import { API_BASE_URL } from "./api-config"
-
-// Ensure API_BASE_URL ends with /api
-const getApiUrl = () => {
-  const base = API_BASE_URL.endsWith("/api") 
-    ? API_BASE_URL 
-    : `${API_BASE_URL}/api`
-  return base
-}
+import { getApiUrl } from "./api-config"
 
 export interface CreateRoomRequest {
   name: string
@@ -48,6 +39,10 @@ export interface VoteRequest {
 }
 
 export interface VoteResponse {
+  success: boolean
+}
+
+export interface RevealVotesResponse {
   success: boolean
 }
 
@@ -125,3 +120,19 @@ export async function submitVote(roomId: string, data: VoteRequest): Promise<Vot
   return response.json()
 }
 
+/**
+ * Reveal votes to all participants
+ */
+export async function revealVotes(roomId: string): Promise<RevealVotesResponse> {
+  const response = await fetch(`${getApiUrl()}/rooms/${roomId}/reveal`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "Failed to reveal votes" }))
+    throw new Error(error.error || "Failed to reveal votes")
+  }
+
+  return response.json()
+}

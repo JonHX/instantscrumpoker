@@ -261,6 +261,28 @@ Resources:
         Environment: !Ref Environment
         Service: scrumpoker
 
+  RevealVotesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub scrumpoker-reveal-votes-${Environment}
+      Handler: handlers/revealVotes.handler
+      CodeUri: ./lambda-build/
+      Description: Reveal votes to all participants
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          WS_ENDPOINT: !Sub 'wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
+      Events:
+        HttpApiEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /api/rooms/{roomId}/reveal
+            Method: post
+      Tags:
+        Environment: !Ref Environment
+        Service: scrumpoker
+
   # ============================================================================
   # LAMBDA FUNCTIONS - WebSocket Handlers
   # ============================================================================
