@@ -9,7 +9,7 @@ export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   // Handle OPTIONS preflight request
-  if (event.httpMethod === 'OPTIONS' || event.requestContext?.http?.method === 'OPTIONS') {
+  if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
       headers: {
