@@ -109,6 +109,40 @@ export function LandingPage({ onCreateRoom, onJoinRoom }: LandingPageProps) {
             </p>
           </div>
 
+          {/* Create Room Card */}
+          <Card className="bg-card border-border p-8 space-y-6">
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-foreground text-left">Room Name</label>
+              <Input
+                placeholder="e.g., Sprint 25 Estimation"
+                value={roomName}
+                onChange={(e) => setRoomName(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && handleCreateRoom()}
+                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
+              />
+            </div>
+
+            <Button
+              onClick={handleCreateRoom}
+              disabled={!roomName.trim() || isLoading}
+              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6 text-base rounded-lg transition-all"
+            >
+              {isLoading ? "Creating..." : "Create Estimation Room"}
+            </Button>
+
+            <p className="text-xs text-muted-foreground">Share the room code with your team. No sign-up required.</p>
+          </Card>
+
+          {/* Join Room Button */}
+          <Button
+            onClick={() => setShowJoinModal(true)}
+            variant="outline"
+            className="w-full border-border text-foreground hover:bg-secondary bg-transparent py-6 flex items-center justify-center gap-2"
+          >
+            <LogIn className="w-4 h-4" />
+            Join Room with Code
+          </Button>
+
           <Card className="bg-card border-border p-6 space-y-4 text-left">
             <h2 className="text-base font-bold text-foreground">How to Play Scrum Poker</h2>
             <div className="space-y-3 text-sm text-muted-foreground">
@@ -149,40 +183,6 @@ export function LandingPage({ onCreateRoom, onJoinRoom }: LandingPageProps) {
               </div>
             </div>
           </Card>
-
-          {/* Create Room Card */}
-          <Card className="bg-card border-border p-8 space-y-6">
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-foreground text-left">Room Name</label>
-              <Input
-                placeholder="e.g., Sprint 25 Estimation"
-                value={roomName}
-                onChange={(e) => setRoomName(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleCreateRoom()}
-                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
-              />
-            </div>
-
-            <Button
-              onClick={handleCreateRoom}
-              disabled={!roomName.trim() || isLoading}
-              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6 text-base rounded-lg transition-all"
-            >
-              {isLoading ? "Creating..." : "Create Estimation Room"}
-            </Button>
-
-            <p className="text-xs text-muted-foreground">Share the room code with your team. No sign-up required.</p>
-          </Card>
-
-          {/* Join Room Button */}
-          <Button
-            onClick={() => setShowJoinModal(true)}
-            variant="outline"
-            className="w-full border-border text-foreground hover:bg-secondary bg-transparent py-6 flex items-center justify-center gap-2"
-          >
-            <LogIn className="w-4 h-4" />
-            Join Room with Code
-          </Button>
 
           {/* Features Grid */}
           <div className="grid md:grid-cols-3 gap-4 pt-8 pb-12">
