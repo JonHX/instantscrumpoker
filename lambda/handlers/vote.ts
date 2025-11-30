@@ -2,6 +2,7 @@ import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 import { docClient, calculateTTL } from "../lib/dynamodb";
 import { UpdateCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { broadcastToRoom } from "../lib/websocket";
+import { getCorsHeaders, getOrigin } from "../lib/cors";
 
 const TABLE_NAME = process.env.ROOMS_TABLE || process.env.TABLE_NAME || "";
 const WS_ENDPOINT = process.env.WS_ENDPOINT || "";
@@ -9,14 +10,14 @@ const WS_ENDPOINT = process.env.WS_ENDPOINT || "";
 export const handler = async (
   event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyResultV2> => {
+  const origin = getOrigin(event);
+  
   // Handle OPTIONS preflight request
   if (event.requestContext.http.method === 'OPTIONS') {
     return {
       statusCode: 200,
       headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
+        ...getCorsHeaders(origin),
         'Access-Control-Max-Age': '86400',
       },
       body: '',
@@ -33,7 +34,7 @@ export const handler = async (
         statusCode: 400,
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
+          ...getCorsHeaders(origin),
         },
         body: JSON.stringify({ error: "Room ID is required" }),
       };
@@ -44,7 +45,7 @@ export const handler = async (
         statusCode: 400,
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
+          ...getCorsHeaders(origin),
         },
         body: JSON.stringify({ error: "participantId and estimate are required" }),
       };
