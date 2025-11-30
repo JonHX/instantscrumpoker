@@ -27,13 +27,13 @@ export function LandingPage({ onCreateRoom, onJoinRoom }: LandingPageProps) {
       setIsLoading(true)
       try {
         const { roomId } = await createRoom({ name: roomName })
-        // Navigate to room page
-        router.push(`/rooms/${roomId}`)
+        // Use window.location for full page navigation (works with static export)
+        // This ensures S3 serves index.html and Next.js client router handles it
+        window.location.href = `/rooms/${roomId}/`
         onCreateRoom?.(roomId)
       } catch (error) {
         console.error("Error creating room:", error)
         alert(error instanceof Error ? error.message : "Failed to create room. Please try again.")
-      } finally {
         setIsLoading(false)
       }
     }
@@ -49,8 +49,9 @@ export function LandingPage({ onCreateRoom, onJoinRoom }: LandingPageProps) {
     setJoinError("")
     try {
       await getRoom(joinCode)
-      // Navigate to room page
-      router.push(`/rooms/${joinCode}`)
+      // Use window.location for full page navigation (works with static export)
+      // This ensures S3 serves index.html and Next.js client router handles it
+      window.location.href = `/rooms/${joinCode}/`
       onJoinRoom?.(joinCode)
     } catch (error) {
       console.error("Error joining room:", error)
