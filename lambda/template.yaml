@@ -491,6 +491,13 @@ Outputs:
     Value: !Sub 'https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com'
     Export:
       Name: !Sub scrumpoker-http-api-url-${Environment}
+  
+  CustomDomainUrl:
+    Condition: HasCertificate
+    Description: Custom Domain URL for API Gateway
+    Value: !Sub 'https://${DomainName}/api'
+    Export:
+      Name: !Sub scrumpoker-custom-domain-url-${Environment}
 
   WebSocketApiUrl:
     Description: WebSocket API Gateway URL
