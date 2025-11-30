@@ -377,9 +377,11 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
 
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-2">
-          <Zap className="w-6 h-6 text-accent" />
-          <h1 className="text-2xl font-bold text-foreground">PokerFlow</h1>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
+            <Zap className="w-5 h-5 text-accent-foreground" />
+          </div>
+          <h1 className="text-lg font-bold text-foreground">InstantScrumPoker</h1>
         </div>
         <div className="flex items-center gap-2">
           <button

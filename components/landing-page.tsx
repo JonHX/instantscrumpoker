@@ -77,123 +77,130 @@ export function LandingPage({ onCreateRoom, onJoinRoom }: LandingPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
-      {/* Header with Theme Toggle */}
-      <div className="absolute top-6 left-6 flex items-center gap-2">
-        <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
-          <Zap className="w-5 h-5 text-accent-foreground" />
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Top Navigation Bar */}
+      <nav className="w-full border-b border-border bg-card/50 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
+              <Zap className="w-5 h-5 text-accent-foreground" />
+            </div>
+            <span className="text-lg font-bold text-foreground">InstantScrumPoker</span>
+          </div>
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg border border-border hover:bg-secondary transition-colors"
+            aria-label="Toggle theme"
+          >
+            {isDark ? <Sun className="w-5 h-5 text-foreground" /> : <Moon className="w-5 h-5 text-foreground" />}
+          </button>
         </div>
-        <span className="text-xl font-bold text-foreground">PokerFlow</span>
-      </div>
-
-      <button
-        onClick={toggleTheme}
-        className="absolute top-6 right-6 p-2 rounded-lg border border-border hover:bg-secondary transition-colors"
-        aria-label="Toggle theme"
-      >
-        {isDark ? <Sun className="w-5 h-5 text-foreground" /> : <Moon className="w-5 h-5 text-foreground" />}
-      </button>
+      </nav>
 
       {/* Main Content */}
-      <div className="w-full max-w-2xl space-y-8 text-center">
-        <div className="space-y-4">
-          <h1 className="text-5xl md:text-7xl font-bold text-foreground text-balance">Estimate Together, Instantly</h1>
-          <p className="text-xl text-muted-foreground text-balance">
-            Real-time scrum poker planning for distributed teams. Create a room, invite your team, and start estimating.
-          </p>
-        </div>
-
-        <Card className="bg-card border-border p-6 space-y-4 text-left">
-          <h2 className="text-lg font-bold text-foreground">How to Play Scrum Poker</h2>
-          <div className="space-y-3 text-sm text-muted-foreground">
-            <div className="flex gap-3">
-              <span className="font-bold text-accent flex-shrink-0">1.</span>
-              <p>
-                <strong className="text-foreground">Create a Room:</strong> Enter a name for your estimation session and
-                share the room code with your team.
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <span className="font-bold text-accent flex-shrink-0">2.</span>
-              <p>
-                <strong className="text-foreground">Select Estimates:</strong> Each team member privately selects a
-                Fibonacci number card (1, 2, 3, 5, 8, 13, 21, 34) representing their complexity estimate.
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <span className="font-bold text-accent flex-shrink-0">3.</span>
-              <p>
-                <strong className="text-foreground">Reveal Votes:</strong> Click "Reveal Votes" to show all estimates at
-                once. Watch for outliers and consensus.
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <span className="font-bold text-accent flex-shrink-0">4.</span>
-              <p>
-                <strong className="text-foreground">Discuss:</strong> If there's disagreement, team members discuss why
-                they chose different values. Use the discussion timer to keep focused.
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <span className="font-bold text-accent flex-shrink-0">5.</span>
-              <p>
-                <strong className="text-foreground">Re-estimate:</strong> After discussion, proceed to the next estimate
-                round. Repeat until consensus is reached.
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        {/* Create Room Card */}
-        <Card className="bg-card border-border p-8 space-y-6">
-          <div className="space-y-3">
-            <label className="block text-sm font-medium text-foreground text-left">Room Name</label>
-            <Input
-              placeholder="e.g., Sprint 25 Estimation"
-              value={roomName}
-              onChange={(e) => setRoomName(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleCreateRoom()}
-              className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
-            />
+      <div className="flex-1 flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-2xl space-y-8 text-center">
+          <div className="space-y-4">
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground text-balance">
+              Estimate Together, Instantly
+            </h1>
+            <p className="text-lg text-muted-foreground text-balance">
+              Real-time scrum poker planning for distributed teams. Create a room, invite your team, and start estimating.
+            </p>
           </div>
 
+          <Card className="bg-card border-border p-6 space-y-4 text-left">
+            <h2 className="text-base font-bold text-foreground">How to Play Scrum Poker</h2>
+            <div className="space-y-3 text-sm text-muted-foreground">
+              <div className="flex gap-3">
+                <span className="font-bold text-accent flex-shrink-0">1.</span>
+                <p>
+                  <strong className="text-foreground">Create a Room:</strong> Enter a name for your estimation session and
+                  share the room code with your team.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <span className="font-bold text-accent flex-shrink-0">2.</span>
+                <p>
+                  <strong className="text-foreground">Select Estimates:</strong> Each team member privately selects a
+                  Fibonacci number card (1, 2, 3, 5, 8, 13, 21, 34) representing their complexity estimate.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <span className="font-bold text-accent flex-shrink-0">3.</span>
+                <p>
+                  <strong className="text-foreground">Reveal Votes:</strong> Click "Reveal Votes" to show all estimates at
+                  once. Watch for outliers and consensus.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <span className="font-bold text-accent flex-shrink-0">4.</span>
+                <p>
+                  <strong className="text-foreground">Discuss:</strong> If there's disagreement, team members discuss why
+                  they chose different values. Use the discussion timer to keep focused.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <span className="font-bold text-accent flex-shrink-0">5.</span>
+                <p>
+                  <strong className="text-foreground">Re-estimate:</strong> After discussion, proceed to the next estimate
+                  round. Repeat until consensus is reached.
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Create Room Card */}
+          <Card className="bg-card border-border p-8 space-y-6">
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-foreground text-left">Room Name</label>
+              <Input
+                placeholder="e.g., Sprint 25 Estimation"
+                value={roomName}
+                onChange={(e) => setRoomName(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && handleCreateRoom()}
+                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
+              />
+            </div>
+
+            <Button
+              onClick={handleCreateRoom}
+              disabled={!roomName.trim() || isLoading}
+              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6 text-base rounded-lg transition-all"
+            >
+              {isLoading ? "Creating..." : "Create Estimation Room"}
+            </Button>
+
+            <p className="text-xs text-muted-foreground">Share the room code with your team. No sign-up required.</p>
+          </Card>
+
+          {/* Join Room Button */}
           <Button
-            onClick={handleCreateRoom}
-            disabled={!roomName.trim() || isLoading}
-            className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6 text-lg rounded-lg transition-all"
+            onClick={() => setShowJoinModal(true)}
+            variant="outline"
+            className="w-full border-border text-foreground hover:bg-secondary bg-transparent py-6 flex items-center justify-center gap-2"
           >
-            {isLoading ? "Creating..." : "Create Estimation Room"}
+            <LogIn className="w-4 h-4" />
+            Join Room with Code
           </Button>
 
-          <p className="text-xs text-muted-foreground">Share the room code with your team. No sign-up required.</p>
-        </Card>
-
-        {/* Join Room Button */}
-        <Button
-          onClick={() => setShowJoinModal(true)}
-          variant="outline"
-          className="w-full border-border text-foreground hover:bg-secondary bg-transparent py-6 flex items-center justify-center gap-2"
-        >
-          <LogIn className="w-4 h-4" />
-          Join Room with Code
-        </Button>
-
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-4 pt-4">
-          <div className="p-6 rounded-lg bg-card border border-border space-y-2">
-            <div className="text-2xl">⚡</div>
-            <h3 className="font-semibold text-foreground">Instant Setup</h3>
-            <p className="text-sm text-muted-foreground">No configuration needed</p>
-          </div>
-          <div className="p-6 rounded-lg bg-card border border-border space-y-2">
-            <div className="text-2xl">👥</div>
-            <h3 className="font-semibold text-foreground">Real-time Sync</h3>
-            <p className="text-sm text-muted-foreground">See votes instantly</p>
-          </div>
-          <div className="p-6 rounded-lg bg-card border border-border space-y-2">
-            <div className="text-2xl">🎯</div>
-            <h3 className="font-semibold text-foreground">Built for Teams</h3>
-            <p className="text-sm text-muted-foreground">Unlimited participants</p>
+          {/* Features Grid */}
+          <div className="grid md:grid-cols-3 gap-4 pt-8 pb-12">
+            <div className="p-6 rounded-lg bg-card border border-border space-y-2">
+              <div className="text-2xl">⚡</div>
+              <h3 className="font-semibold text-foreground text-sm">Instant Setup</h3>
+              <p className="text-xs text-muted-foreground">No configuration needed</p>
+            </div>
+            <div className="p-6 rounded-lg bg-card border border-border space-y-2">
+              <div className="text-2xl">👥</div>
+              <h3 className="font-semibold text-foreground text-sm">Real-time Sync</h3>
+              <p className="text-xs text-muted-foreground">See votes instantly</p>
+            </div>
+            <div className="p-6 rounded-lg bg-card border border-border space-y-2">
+              <div className="text-2xl">🎯</div>
+              <h3 className="font-semibold text-foreground text-sm">Built for Teams</h3>
+              <p className="text-xs text-muted-foreground">Unlimited participants</p>
+            </div>
           </div>
         </div>
       </div>
