@@ -31,7 +31,7 @@ export function getCorsHeaders(origin?: string): Record<string, string> {
  * @param event APIGatewayProxyEventV2
  * @returns Origin string or undefined
  */
-export function getOrigin(event: { headers?: Record<string, string> }): string | undefined {
+export function getOrigin(event: { headers?: Record<string, string | undefined> }): string | undefined {
   return event.headers?.origin || event.headers?.Origin;
 }
 
