@@ -12,7 +12,6 @@ import { ShareModal } from "./share-modal"
 import { Zap, LogOut, MessageSquare, Moon, Sun, Share2 } from "lucide-react"
 import { WS_ENDPOINT } from "@/lib/api-config"
 import { getRoom, joinRoom, submitVote } from "@/lib/api"
-import { Spinner } from "@/components/ui/spinner"
 
 const FIBONACCI = ["1", "2", "3", "5", "8", "13", "21", "34", "?"]
 
@@ -42,13 +41,12 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
   const [showShareModal, setShowShareModal] = useState(false)
   const [roomName, setRoomName] = useState("")
   const [participantId, setParticipantId] = useState<string>("")
-  const [isLoadingRoom, setIsLoadingRoom] = useState(false)
   const audioRef = useRef<HTMLAudioElement>(null)
   const wsRef = useRef<WebSocket | null>(null)
 
   const fetchRoomData = useCallback(async () => {
     try {
-      setIsLoadingRoom(true)
+      // Load room data silently in background (non-blocking)
       const data = await getRoom(roomId)
       setRoomName(data.name)
 
@@ -64,8 +62,6 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
       }
     } catch (error) {
       console.error("Error fetching room data:", error)
-    } finally {
-      setIsLoadingRoom(false)
     }
   }, [roomId])
 
@@ -201,7 +197,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
   }
 
   const handleJoin = async () => {
-    if (userName.trim()) {
+    if (userName.trim() && !hasJoined) {
       try {
         // Save name to localStorage for this room
         localStorage.setItem(`scrumpoker-name-${roomId}`, userName.trim())
@@ -321,27 +317,14 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
             <p className="font-mono text-accent text-sm break-all font-bold text-lg">
               {roomId}
             </p>
-            {isLoadingRoom && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Spinner className="w-4 h-4" />
-                <span>Loading room...</span>
-              </div>
-            )}
           </div>
 
           <Button
             onClick={handleJoin}
-            disabled={!userName.trim() || isLoadingRoom}
+            disabled={!userName.trim() || hasJoined}
             className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6"
           >
-            {isLoadingRoom ? (
-              <span className="flex items-center gap-2">
-                <Spinner className="w-4 h-4" />
-                Loading...
-              </span>
-            ) : (
-              "Join Estimation"
-            )}
+            Join Estimation
           </Button>
         </Card>
         <audio
