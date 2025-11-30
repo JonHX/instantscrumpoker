@@ -198,12 +198,18 @@ Resources:
       Description: Create a new ScrumPoker room
       Role: !GetAtt LambdaExecutionRole.Arn
       Events:
-        HttpApiEvent:
+        HttpApiEventPost:
           Type: HttpApi
           Properties:
             ApiId: !Ref HttpApi
             Path: /api/rooms
             Method: post
+        HttpApiEventOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /api/rooms
+            Method: options
       Tags:
         Environment: !Ref Environment
         Service: scrumpoker
@@ -217,12 +223,18 @@ Resources:
       Description: Get room data
       Role: !GetAtt LambdaExecutionRole.Arn
       Events:
-        HttpApiEvent:
+        HttpApiEventGet:
           Type: HttpApi
           Properties:
             ApiId: !Ref HttpApi
             Path: /api/rooms/{roomId}
             Method: get
+        HttpApiEventOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /api/rooms/{roomId}
+            Method: options
       Tags:
         Environment: !Ref Environment
         Service: scrumpoker
@@ -239,12 +251,18 @@ Resources:
         Variables:
           WS_ENDPOINT: !Sub 'wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
       Events:
-        HttpApiEvent:
+        HttpApiEventPost:
           Type: HttpApi
           Properties:
             ApiId: !Ref HttpApi
             Path: /api/rooms/{roomId}/join
             Method: post
+        HttpApiEventOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /api/rooms/{roomId}/join
+            Method: options
       Tags:
         Environment: !Ref Environment
         Service: scrumpoker
@@ -261,12 +279,18 @@ Resources:
         Variables:
           WS_ENDPOINT: !Sub 'wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
       Events:
-        HttpApiEvent:
+        HttpApiEventPost:
           Type: HttpApi
           Properties:
             ApiId: !Ref HttpApi
             Path: /api/rooms/{roomId}/vote
             Method: post
+        HttpApiEventOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /api/rooms/{roomId}/vote
+            Method: options
       Tags:
         Environment: !Ref Environment
         Service: scrumpoker
@@ -283,12 +307,18 @@ Resources:
         Variables:
           WS_ENDPOINT: !Sub 'wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
       Events:
-        HttpApiEvent:
+        HttpApiEventPost:
           Type: HttpApi
           Properties:
             ApiId: !Ref HttpApi
             Path: /api/rooms/{roomId}/reveal
             Method: post
+        HttpApiEventOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /api/rooms/{roomId}/reveal
+            Method: options
       Tags:
         Environment: !Ref Environment
         Service: scrumpoker
