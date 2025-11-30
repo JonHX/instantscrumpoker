@@ -12,7 +12,7 @@ import { ShareModal } from "./share-modal"
 import { Zap, LogOut, MessageSquare, Moon, Sun, Share2 } from "lucide-react"
 import { WS_ENDPOINT } from "@/lib/api-config"
 import { getRoom, joinRoom, submitVote } from "@/lib/api"
-import { PokerRoomSkeleton } from "./poker-room-skeleton"
+import { Spinner } from "@/components/ui/spinner"
 
 const FIBONACCI = ["1", "2", "3", "5", "8", "13", "21", "34", "?"]
 
@@ -42,12 +42,20 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
   const [showShareModal, setShowShareModal] = useState(false)
   const [roomName, setRoomName] = useState("")
   const [participantId, setParticipantId] = useState<string>("")
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingRoom, setIsLoadingRoom] = useState(false)
   const audioRef = useRef<HTMLAudioElement>(null)
   const wsRef = useRef<WebSocket | null>(null)
 
+  // Load saved name for this room from localStorage
   useEffect(() => {
-    // Initial fetch
+    const savedName = localStorage.getItem(`scrumpoker-name-${roomId}`)
+    if (savedName) {
+      setUserName(savedName)
+    }
+  }, [roomId])
+
+  useEffect(() => {
+    // Load room data in background (non-blocking)
     fetchRoomData()
 
     // Set up WebSocket connection
@@ -113,7 +121,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
 
   const fetchRoomData = async () => {
     try {
-      setIsLoading(true)
+      setIsLoadingRoom(true)
       const data = await getRoom(roomId)
       setRoomName(data.name)
 
@@ -130,7 +138,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
     } catch (error) {
       console.error("Error fetching room data:", error)
     } finally {
-      setIsLoading(false)
+      setIsLoadingRoom(false)
     }
   }
 
@@ -170,19 +178,24 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
   const handleJoin = async () => {
     if (userName.trim()) {
       try {
-        const { participantId: newParticipantId } = await joinRoom(roomId, { name: userName })
+        // Save name to localStorage for this room
+        localStorage.setItem(`scrumpoker-name-${roomId}`, userName.trim())
+        
+        const { participantId: newParticipantId } = await joinRoom(roomId, { name: userName.trim() })
         setParticipantId(newParticipantId)
 
         const newParticipant: Participant = {
           id: newParticipantId,
-          name: userName,
+          name: userName.trim(),
           voted: false,
         }
         setParticipants([...participants, newParticipant])
         setHasJoined(true)
 
-        // Fetch room name
-        await fetchRoomData()
+        // Fetch room name if not already loaded
+        if (!roomName) {
+          await fetchRoomData()
+        }
       } catch (error) {
         console.error("Error joining room:", error)
         alert(error instanceof Error ? error.message : "Failed to join room")
@@ -257,11 +270,6 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
     }
   }
 
-  // Show skeleton while loading room data
-  if (isLoading && !hasJoined) {
-    return <PokerRoomSkeleton />
-  }
-
   if (!hasJoined) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
@@ -288,14 +296,27 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
             <p className="font-mono text-accent text-sm break-all font-bold text-lg">
               {roomId.split("-").pop()?.toUpperCase() || roomId.slice(-4).toUpperCase()}
             </p>
+            {isLoadingRoom && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Spinner className="w-4 h-4" />
+                <span>Loading room...</span>
+              </div>
+            )}
           </div>
 
           <Button
             onClick={handleJoin}
-            disabled={!userName.trim()}
+            disabled={!userName.trim() || isLoadingRoom}
             className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6"
           >
-            Join Estimation
+            {isLoadingRoom ? (
+              <span className="flex items-center gap-2">
+                <Spinner className="w-4 h-4" />
+                Loading...
+              </span>
+            ) : (
+              "Join Estimation"
+            )}
           </Button>
         </Card>
         <audio
