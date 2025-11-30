@@ -101,8 +101,8 @@ jobs:
           command: |
             cd ~/repo
             npm ci
-            # Add /api suffix to HTTP API URL for the base URL
-            NEXT_PUBLIC_API_BASE_URL="${HTTP_API_URL}/api" NEXT_PUBLIC_WS_ENDPOINT="$WS_API_URL" npm run build
+            # API_BASE_URL should be the base URL without /api (the API client will add it)
+            NEXT_PUBLIC_API_BASE_URL="${HTTP_API_URL}" NEXT_PUBLIC_WS_ENDPOINT="$WS_API_URL" npm run build
       - run:
           name: Upload frontend to S3
           command: |

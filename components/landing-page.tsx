@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { Zap, Moon, Sun, LogIn } from "lucide-react"
-import { API_BASE_URL } from "@/lib/api-config"
+import { createRoom, getRoom } from "@/lib/api"
 
 interface LandingPageProps {
   onCreateRoom?: (roomId: string) => void
@@ -26,21 +26,13 @@ export function LandingPage({ onCreateRoom, onJoinRoom }: LandingPageProps) {
     if (roomName.trim()) {
       setIsLoading(true)
       try {
-        const response = await fetch(`${API_BASE_URL}/rooms`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: roomName }),
-        })
-
-        if (!response.ok) throw new Error("Failed to create room")
-
-        const { roomId } = await response.json()
+        const { roomId } = await createRoom({ name: roomName })
         // Navigate to room page
         router.push(`/rooms/${roomId}`)
         onCreateRoom?.(roomId)
       } catch (error) {
         console.error("Error creating room:", error)
-        alert("Failed to create room. Please try again.")
+        alert(error instanceof Error ? error.message : "Failed to create room. Please try again.")
       } finally {
         setIsLoading(false)
       }
@@ -56,22 +48,17 @@ export function LandingPage({ onCreateRoom, onJoinRoom }: LandingPageProps) {
     setIsLoading(true)
     setJoinError("")
     try {
-      const response = await fetch(`${API_BASE_URL}/rooms/${joinCode}`, {
-        method: "GET",
-      })
-
-      if (!response.ok) {
-        setJoinError("Room not found. Check your code and try again.")
-        setIsLoading(false)
-        return
-      }
-
+      await getRoom(joinCode)
       // Navigate to room page
       router.push(`/rooms/${joinCode}`)
       onJoinRoom?.(joinCode)
     } catch (error) {
       console.error("Error joining room:", error)
-      setJoinError("Failed to join room. Please try again.")
+      if (error instanceof Error && error.message === "Room not found") {
+        setJoinError("Room not found. Check your code and try again.")
+      } else {
+        setJoinError("Failed to join room. Please try again.")
+      }
       setIsLoading(false)
     }
   }

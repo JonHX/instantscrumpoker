@@ -10,7 +10,8 @@ import { ParticipantsList } from "./participants-list"
 import { ConfettiCannon } from "./confetti-cannon"
 import { ShareModal } from "./share-modal"
 import { Zap, LogOut, MessageSquare, Moon, Sun, Share2 } from "lucide-react"
-import { API_BASE_URL, WS_ENDPOINT } from "@/lib/api-config"
+import { WS_ENDPOINT } from "@/lib/api-config"
+import { getRoom, joinRoom, submitVote } from "@/lib/api"
 
 const FIBONACCI = ["1", "2", "3", "5", "8", "13", "21", "34", "?"]
 
@@ -110,10 +111,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
 
   const fetchRoomData = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/rooms/${roomId}`)
-      if (!response.ok) throw new Error("Failed to fetch room")
-
-      const data = await response.json()
+      const data = await getRoom(roomId)
       setRoomName(data.name)
 
       // Map participants from room data to include vote status
@@ -167,15 +165,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
   const handleJoin = async () => {
     if (userName.trim()) {
       try {
-        const response = await fetch(`${API_BASE_URL}/rooms/${roomId}/join`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: userName }),
-        })
-
-        if (!response.ok) throw new Error("Failed to join room")
-
-        const { participantId: newParticipantId } = await response.json()
+        const { participantId: newParticipantId } = await joinRoom(roomId, { name: userName })
         setParticipantId(newParticipantId)
 
         const newParticipant: Participant = {
@@ -190,7 +180,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
         await fetchRoomData()
       } catch (error) {
         console.error("Error joining room:", error)
-        alert("Failed to join room")
+        alert(error instanceof Error ? error.message : "Failed to join room")
       }
     }
   }
@@ -200,11 +190,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
     setParticipants(participants.map((p) => (p.id === participantId ? { ...p, vote: value, voted: true } : p)))
 
     try {
-      await fetch(`${API_BASE_URL}/rooms/${roomId}/vote`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ participantId, estimate: value }),
-      })
+      await submitVote(roomId, { participantId, estimate: value })
     } catch (error) {
       console.error("Error submitting vote:", error)
     }
