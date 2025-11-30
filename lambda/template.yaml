@@ -12,15 +12,6 @@ Parameters:
       - prod
     Description: Environment name
   
-  DomainName:
-    Type: String
-    Default: api.instantscrumpoker.com
-    Description: Custom domain name for API Gateway
-  
-  CertificateArn:
-    Type: String
-    Default: ""
-    Description: ACM Certificate ARN for custom domain (must be in us-east-1). Leave empty to skip custom domain setup.
 
 Globals:
   Function:
@@ -34,9 +25,6 @@ Globals:
         ROOMS_TABLE: !Ref RoomsTable
         TABLE_NAME: !Ref RoomsTable  # Keep for backward compatibility
         CONNECTIONS_TABLE: !Ref ConnectionsTable
-
-Conditions:
-  HasCertificate: !Not [!Equals [!Ref CertificateArn, ""]]
 
 Resources:
   # ============================================================================
@@ -183,36 +171,22 @@ Resources:
         MaxAge: 3600
 
   # ============================================================================
-  # API GATEWAY CUSTOM DOMAIN (Optional - requires ACM certificate)
+  # API GATEWAY CUSTOM DOMAIN
   # ============================================================================
-  # Note: To use custom domain:
-  # 1. Create ACM certificate for api.instantscrumpoker.com in us-east-1
-  # 2. Validate certificate via DNS (add CNAME in Cloudflare)
-  # 3. Set CertificateArn parameter to the certificate ARN
-  # 4. Deploy template
+  # Custom Domain is already created manually in API Gateway Console:
+  # - Domain: api.instantscrumpoker.com
+  # - Certificate: arn:aws:acm:eu-west-1:425278536756:certificate/586cec7b-3aa6-449e-b96a-567676e158bb
+  # - API Gateway Domain: d-ibazegoxma.execute-api.eu-west-1.amazonaws.com
   # 
-  # Alternative: Use Cloudflare CNAME without Custom Domain (current setup)
-  # Cloudflare will proxy, but API Gateway may require Host header matching
-  ApiDomainName:
-    Type: AWS::ApiGatewayV2::DomainName
-    Condition: HasCertificate
-    Properties:
-      DomainName: !Ref DomainName
-      DomainNameConfigurations:
-        - CertificateArn: !Ref CertificateArn
-          EndpointType: REGIONAL
-          SecurityPolicy: TLS_1_2
-
-  ApiDomainMapping:
-    Type: AWS::ApiGatewayV2::ApiMapping
-    Condition: HasCertificate
-    DependsOn: ApiDomainName
-    Properties:
-      ApiId: !Ref HttpApi
-      DomainName: !Ref ApiDomainName
-      Stage: !Ref Environment
-      # ApiMappingKey omitted = empty base path
-      # This means https://api.instantscrumpoker.com/api/rooms maps to /api/rooms route
+  # API Mapping must be created/updated manually in Console:
+  # - Go to API Gateway → Custom Domain Names → api.instantscrumpoker.com
+  # - Add API Mapping:
+  #   - API: scrumpoker-api-{Environment}
+  #   - Stage: {Environment}
+  #   - Base Path: (leave empty) - so /api/rooms routes work
+  #
+  # Cloudflare DNS should point to: d-ibazegoxma.execute-api.eu-west-1.amazonaws.com
+  # (Update CNAME target in Cloudflare)
 
   # ============================================================================
   # WEBSOCKET API GATEWAY
@@ -490,11 +464,14 @@ Outputs:
       Name: !Sub scrumpoker-http-api-url-${Environment}
   
   CustomDomainUrl:
-    Condition: HasCertificate
-    Description: Custom Domain URL for API Gateway
-    Value: !Sub 'https://${DomainName}/api'
+    Description: Custom Domain URL for API Gateway (manually configured)
+    Value: 'https://api.instantscrumpoker.com/api'
     Export:
       Name: !Sub scrumpoker-custom-domain-url-${Environment}
+  
+  CustomDomainTarget:
+    Description: API Gateway Domain Name for Cloudflare CNAME
+    Value: 'd-ibazegoxma.execute-api.eu-west-1.amazonaws.com'
 
   WebSocketApiUrl:
     Description: WebSocket API Gateway URL
