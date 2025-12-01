@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useState, useRef, useEffect, useCallback } from "react"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
@@ -10,7 +9,8 @@ import { Timer } from "./timer"
 import { ParticipantsList } from "./participants-list"
 import { ConfettiCannon } from "./confetti-cannon"
 import { ShareModal } from "./share-modal"
-import { Zap, LogOut, MessageSquare, Moon, Sun, Share2 } from "lucide-react"
+import { Zap, LogOut, MessageSquare, Share2 } from "lucide-react"
+import { Nav } from "@/components/nav"
 import { WS_ENDPOINT } from "@/lib/api-config"
 import { getRoom, joinRoom, submitVote, revealVotes, nextEstimate } from "@/lib/api"
 
@@ -54,7 +54,6 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
     }
     return false
   })
-  const [isDark, setIsDark] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
   const [roomName, setRoomName] = useState("")
   const [participantId, setParticipantId] = useState<string>("")
@@ -431,18 +430,6 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
     setIsTimerRunning(false)
   }
 
-  const toggleTheme = () => {
-    const newIsDark = !isDark
-    setIsDark(newIsDark)
-    if (newIsDark) {
-      document.documentElement.classList.add("dark")
-      localStorage.setItem("theme", "dark")
-    } else {
-      document.documentElement.classList.remove("dark")
-      localStorage.setItem("theme", "light")
-    }
-  }
-
   const playSound = () => {
     if (audioRef.current) {
       audioRef.current.currentTime = 0
@@ -454,30 +441,20 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
     // Show loading state during auto-join attempt
     if (isJoining) {
       return (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <p className="text-muted-foreground">Joining room...</p>
-          </div>
+        <div className="min-h-screen bg-background flex flex-col">
+          <Nav />
+          <main className="flex-1 flex items-center justify-center px-4" role="main">
+            <div className="text-center">
+              <p className="text-muted-foreground">Joining room...</p>
+            </div>
+          </main>
         </div>
       )
     }
 
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <nav className="w-full border-b border-border bg-card/50 backdrop-blur-sm" role="navigation" aria-label="Main navigation">
-          <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-            <Link 
-              href="/" 
-              className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 rounded-lg"
-              aria-label="InstantScrumPoker home"
-            >
-              <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center" aria-hidden="true">
-                <Zap className="w-5 h-5 text-accent-foreground" />
-              </div>
-              <span className="text-lg font-bold text-foreground">InstantScrumPoker</span>
-            </Link>
-          </div>
-        </nav>
+        <Nav />
         <main className="flex-1 flex items-center justify-center px-4" role="main">
           <Card className="w-full max-w-md bg-card border-border p-8 space-y-6">
             <div className="flex items-center gap-2">
@@ -548,31 +525,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
         Skip to main content
       </a>
 
-      {/* Header */}
-      <nav className="w-full border-b border-border bg-card/50 backdrop-blur-sm" role="navigation" aria-label="Main navigation">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link 
-            href="/" 
-            className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 rounded-lg"
-            aria-label="InstantScrumPoker home"
-          >
-            <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center" aria-hidden="true">
-              <Zap className="w-5 h-5 text-accent-foreground" />
-            </div>
-            <span className="text-lg font-bold text-foreground">InstantScrumPoker</span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg border border-border hover:bg-secondary transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
-              aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
-              type="button"
-            >
-              {isDark ? <Sun className="w-4 h-4 text-foreground" aria-hidden="true" /> : <Moon className="w-4 h-4 text-foreground" aria-hidden="true" />}
-            </button>
-          </div>
-        </div>
-      </nav>
+      <Nav />
 
       <main id="main-content" className="min-h-screen bg-background px-4 md:px-8 py-8" role="main">
         <div className="grid lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
