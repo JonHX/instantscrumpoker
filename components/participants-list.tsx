@@ -24,7 +24,8 @@ export function ParticipantsList({ participants, isVotingOpen = true, roomId, ro
   const [copied, setCopied] = useState(false)
   
   const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/rooms/${roomId}` : ""
-  const roomCode = roomName || roomId.split("-").pop()?.toUpperCase() || roomId.slice(-4).toUpperCase()
+  // Use full roomId in uppercase, or roomName if provided
+  const roomCode = roomName || roomId.toUpperCase()
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text)
