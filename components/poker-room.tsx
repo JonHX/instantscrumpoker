@@ -371,17 +371,46 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
     try {
       // Call API to broadcast reveal to all participants
       await revealVotes(roomId)
-      setIsVotingOpen(false)
-      // Fetch room data to get all revealed votes (pass true to show votes)
-      await fetchRoomData(true)
-      const { isCleanSweep } = getVoteStats()
-      if (isCleanSweep) {
-        setShowConfetti(true)
-      } else {
-        setDiscussionMode(true)
-        setIsTimerRunning(false) // Don't auto-start timer
-        setTimerSeconds(180)
+      
+      // Fetch room data first to get all revealed votes
+      const data = await getRoom(roomId)
+      
+      // Now update all states in a single batch to prevent flickering
+      if (data.participants) {
+        const mappedParticipants = data.participants.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          voted: !!p.vote,
+          vote: p.vote,
+        }))
+        
+        // Calculate stats from the fetched data
+        const votes = mappedParticipants.filter((p: any) => p.vote && p.vote !== "?").map((p: any) => p.vote!)
+        const voteCounts = votes.reduce(
+          (acc: Record<string, number>, vote: string) => {
+            acc[vote] = (acc[vote] || 0) + 1
+            return acc
+          },
+          {} as Record<string, number>,
+        )
+        const allVoted = mappedParticipants.filter((p: any) => p.voted).length === mappedParticipants.length
+        const onlyOneValue = Object.keys(voteCounts).length === 1
+        const isCleanSweep = allVoted && onlyOneValue && votes.length === mappedParticipants.length
+        
+        // Batch all state updates together
+        setParticipants(mappedParticipants)
+        setIsVotingOpen(false)
+        
+        if (isCleanSweep) {
+          setShowConfetti(true)
+          setDiscussionMode(false)
+        } else {
+          setDiscussionMode(true)
+          setTimerSeconds(180)
+          setIsTimerRunning(false)
+        }
       }
+      
       playSound()
     } catch (error) {
       console.error("Error revealing votes:", error)
@@ -549,6 +578,25 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
         <div className="grid lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Clean Sweep Message */}
+          {isCleanSweep && !isVotingOpen && !isDraw && (
+            <Card className="bg-gradient-to-r from-accent/20 to-accent/10 border-2 border-accent p-4 text-center">
+              <p className="text-xl font-bold text-accent">🎉 Clean Sweep! All Agreed 🎉</p>
+              <p className="text-sm text-muted-foreground mt-1">Everyone selected {mostCommon?.[0]}</p>
+            </Card>
+          )}
+
+          {/* Draw Message - Shows above timer */}
+          {isDraw && !isVotingOpen && (
+            <Card className="bg-gradient-to-r from-orange-500/20 to-yellow-500/20 border-2 border-orange-500 p-4 text-center">
+              <p className="text-xl font-bold text-orange-600 dark:text-orange-400">⚔️ DRAW! ⚔️</p>
+              <p className="text-3xl font-bold text-foreground mt-1">
+                {drawValues.join(" vs ")}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">Teams are tied - time to discuss!</p>
+            </Card>
+          )}
+
           {/* Timer & Discussion */}
           {discussionMode && (
             <section aria-labelledby="discussion-heading">
@@ -566,25 +614,6 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
                 </div>
               </Card>
             </section>
-          )}
-
-          {/* Clean Sweep Message */}
-          {isCleanSweep && !isVotingOpen && !isDraw && (
-            <Card className="bg-gradient-to-r from-accent/20 to-accent/10 border-2 border-accent p-6 text-center">
-              <p className="text-2xl font-bold text-accent">🎉 Clean Sweep! All Agreed 🎉</p>
-              <p className="text-sm text-muted-foreground mt-2">Everyone selected {mostCommon?.[0]}</p>
-            </Card>
-          )}
-
-          {/* Draw Message */}
-          {isDraw && !isVotingOpen && (
-            <Card className="bg-gradient-to-r from-orange-500/20 to-yellow-500/20 border-2 border-orange-500 p-6 text-center">
-              <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">⚔️ DRAW! ⚔️</p>
-              <p className="text-3xl font-bold text-foreground mt-2">
-                {drawValues.join(" VS ")}
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">Teams are tied - time to discuss!</p>
-            </Card>
           )}
 
           {/* Voting Phase */}
