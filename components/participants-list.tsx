@@ -1,7 +1,9 @@
 "use client"
 
+import { useState } from "react"
 import { Card } from "@/components/ui/card"
-import { Users, CheckCircle2, Clock } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Users, CheckCircle2, Clock, Copy, LogOut } from "lucide-react"
 
 interface Participant {
   id: string
@@ -13,9 +15,22 @@ interface Participant {
 interface ParticipantsListProps {
   participants: Participant[]
   isVotingOpen?: boolean
+  roomId: string
+  roomName?: string
+  onExit?: () => void
 }
 
-export function ParticipantsList({ participants, isVotingOpen = true }: ParticipantsListProps) {
+export function ParticipantsList({ participants, isVotingOpen = true, roomId, roomName, onExit }: ParticipantsListProps) {
+  const [copied, setCopied] = useState(false)
+  
+  const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/rooms/${roomId}` : ""
+  const roomCode = roomName || roomId.split("-").pop()?.toUpperCase() || roomId.slice(-4).toUpperCase()
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
   const votedCount = participants.filter((p) => p.voted).length
 
   return (
@@ -58,6 +73,75 @@ export function ParticipantsList({ participants, isVotingOpen = true }: Particip
 
       {participants.length === 0 && (
         <p className="text-xs text-muted-foreground text-center py-4">Waiting for team members...</p>
+      )}
+
+      {/* Share Room Section */}
+      <div className="mt-6 pt-6 border-t border-border space-y-4">
+        <h4 className="font-bold text-foreground text-sm">Share Room</h4>
+        
+        {/* Room Code */}
+        <div>
+          <p className="text-xs font-medium text-muted-foreground mb-2">ROOM CODE</p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 bg-secondary border border-border rounded-lg p-3 text-accent font-mono font-bold text-center text-lg select-all">
+              {roomCode}
+            </code>
+            <Button
+              onClick={() => handleCopy(roomCode)}
+              size="sm"
+              variant="outline"
+              className="border-border bg-transparent hover:bg-secondary flex-shrink-0"
+              aria-label="Copy room code"
+            >
+              <Copy className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Share Link */}
+        <div>
+          <p className="text-xs font-medium text-muted-foreground mb-2">SHARE LINK</p>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={shareUrl}
+              readOnly
+              className="flex-1 bg-secondary border border-border rounded-lg p-3 text-foreground text-sm truncate select-all cursor-pointer"
+              onClick={(e) => e.currentTarget.select()}
+            />
+            <Button
+              onClick={() => handleCopy(shareUrl)}
+              size="sm"
+              variant="outline"
+              className="border-border bg-transparent hover:bg-secondary flex-shrink-0"
+              aria-label="Copy share link"
+            >
+              <Copy className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Copy Feedback */}
+        {copied && (
+          <p className="text-xs text-accent text-center font-medium animate-in fade-in">
+            Copied to clipboard!
+          </p>
+        )}
+      </div>
+
+      {/* Exit Button */}
+      {onExit && (
+        <div className="mt-4">
+          <Button
+            onClick={onExit}
+            variant="outline"
+            className="w-full flex items-center justify-center gap-3 border-border text-muted-foreground hover:text-foreground hover:bg-secondary bg-transparent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 py-6"
+            aria-label="Exit room"
+          >
+            <LogOut className="w-5 h-5" aria-hidden="true" />
+            <span className="font-semibold">Exit Room</span>
+          </Button>
+        </div>
       )}
     </Card>
   )

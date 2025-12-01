@@ -46,10 +46,16 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
   }
   const [userName, setUserName] = useState(() => getSavedName())
   const [hasJoined, setHasJoined] = useState(false)
-  const [isJoining, setIsJoining] = useState(false)
+  // Start in joining state if we have a saved name to prevent flash
+  const [isJoining, setIsJoining] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(`scrumpoker-name-${roomId}`)
+      return !!(saved && saved.trim())
+    }
+    return false
+  })
   const [isDark, setIsDark] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
-  const [showShareModal, setShowShareModal] = useState(false)
   const [roomName, setRoomName] = useState("")
   const [participantId, setParticipantId] = useState<string>("")
   const [previousEstimates, setPreviousEstimates] = useState<Array<{
@@ -317,12 +323,21 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
   }
 
   const handleVote = async (value: string) => {
-    setCurrentVote(value)
-    // Only update local state for current user - don't show vote to others yet
-    setParticipants(participants.map((p) => (p.id === participantId ? { ...p, vote: value, voted: true } : p)))
+    // Allow unselecting by clicking the same card
+    const newVote = currentVote === value ? null : value
+    setCurrentVote(newVote)
+    
+    // Update local state for current user
+    setParticipants(participants.map((p) => 
+      p.id === participantId 
+        ? { ...p, vote: newVote || undefined, voted: !!newVote } 
+        : p
+    ))
 
     try {
-      await submitVote(roomId, { participantId, estimate: value })
+      if (newVote) {
+        await submitVote(roomId, { participantId, estimate: newVote })
+      }
       // Vote is submitted but not visible to others until revealed
     } catch (error) {
       console.error("Error submitting vote:", error)
@@ -398,6 +413,17 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
   }
 
   if (!hasJoined) {
+    // Show loading state during auto-join attempt
+    if (isJoining) {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <p className="text-muted-foreground">Joining room...</p>
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <nav className="w-full border-b border-border bg-card/50 backdrop-blur-sm" role="navigation" aria-label="Main navigation">
@@ -470,7 +496,6 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
   return (
     <>
       {showConfetti && <ConfettiCannon />}
-      {showShareModal && <ShareModal roomId={roomId} roomName={roomName || roomId} onClose={() => setShowShareModal(false)} />}
       <audio
         ref={audioRef}
         src="data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA=="
@@ -500,14 +525,6 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
           </Link>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowShareModal(true)}
-              className="p-2 rounded-lg border border-border hover:bg-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
-              aria-label="Share room"
-              type="button"
-            >
-              <Share2 className="w-4 h-4 text-foreground" aria-hidden="true" />
-            </button>
-            <button
               onClick={toggleTheme}
               className="p-2 rounded-lg border border-border hover:bg-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
               aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
@@ -515,15 +532,6 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
             >
               {isDark ? <Sun className="w-4 h-4 text-foreground" aria-hidden="true" /> : <Moon className="w-4 h-4 text-foreground" aria-hidden="true" />}
             </button>
-            <Button
-              onClick={onExit}
-              variant="outline"
-              className="flex items-center gap-2 border-border text-muted-foreground hover:text-foreground bg-transparent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
-              aria-label="Exit room"
-            >
-              <LogOut className="w-4 h-4" aria-hidden="true" />
-              Exit
-            </Button>
           </div>
         </div>
       </nav>
@@ -565,7 +573,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
                 <div>
                   <h2 id="voting-heading" className="text-xl font-bold text-foreground">Estimate Points</h2>
                   <p className="text-sm text-muted-foreground mt-1" role="status" aria-live="polite">
-                    {isVotingOpen ? (currentVote ? "Vote submitted" : "Select your estimate") : "Votes revealed"}
+                    {isVotingOpen ? (currentVote ? "Vote submitted - click again to change or unselect" : "Select your estimate") : "Votes revealed"}
                   </p>
                 </div>
                 <div className="text-right">
@@ -582,7 +590,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
                     cards={FIBONACCI}
                     selectedCard={currentVote}
                     onSelectCard={handleVote}
-                    isDisabled={!!currentVote}
+                    isDisabled={false}
                   />
                 </div>
               ) : (
@@ -637,11 +645,10 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
                     >
                       <div className="flex items-center gap-3">
                         <span className="text-sm font-bold text-accent" aria-label={`Estimate number ${previousEstimates.length - index}`}>#{previousEstimates.length - index}</span>
-                        <span className="text-sm text-foreground">{estimate.story_title}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         {Object.entries(estimate.votes || {}).map(([pid, vote]: [string, any]) => (
-                          <span key={pid} className="text-xs text-muted-foreground" aria-label={`Vote: ${vote.estimate}`}>
+                          <span key={pid} className="text-sm font-medium text-muted-foreground" aria-label={`Vote: ${vote.estimate}`}>
                             {vote.estimate}
                           </span>
                         ))}
@@ -723,7 +730,13 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
 
         {/* Sidebar - Participants */}
         <aside aria-label="Participants list">
-          <ParticipantsList participants={participants} isVotingOpen={isVotingOpen} />
+          <ParticipantsList 
+            participants={participants} 
+            isVotingOpen={isVotingOpen}
+            roomId={roomId}
+            roomName={roomName}
+            onExit={onExit}
+          />
         </aside>
       </div>
       </main>
