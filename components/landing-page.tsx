@@ -168,19 +168,19 @@ export function LandingPage({ onCreateRoom, onJoinRoom }: LandingPageProps) {
               {isLoading ? "Creating..." : "Create Estimation Room"}
             </Button>
 
+            {/* Join Room Button */}
+            <Button
+              onClick={() => setShowJoinModal(true)}
+              variant="outline"
+              className="w-full border-border text-foreground hover:bg-secondary bg-transparent py-6 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+              aria-label="Join room with code"
+            >
+              <LogIn className="w-4 h-4" aria-hidden="true" />
+              Join Room with Code
+            </Button>
+
             <p className="text-xs text-muted-foreground">Share the room code with your team. No sign-up required.</p>
           </Card>
-
-          {/* Join Room Button */}
-          <Button
-            onClick={() => setShowJoinModal(true)}
-            variant="outline"
-            className="w-full border-border text-foreground hover:bg-secondary bg-transparent py-6 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
-            aria-label="Join room with code"
-          >
-            <LogIn className="w-4 h-4" aria-hidden="true" />
-            Join Room with Code
-          </Button>
 
           <Card className="bg-card border-border p-6 space-y-4 text-left">
             <h2 className="text-base font-bold text-foreground">How to Play Scrum Poker</h2>
@@ -222,25 +222,6 @@ export function LandingPage({ onCreateRoom, onJoinRoom }: LandingPageProps) {
               </div>
             </div>
           </Card>
-
-          {/* Features Grid */}
-          <div className="grid md:grid-cols-3 gap-4 pt-8 pb-12">
-            <div className="p-6 rounded-lg bg-card border border-border space-y-2">
-              <div className="text-2xl">⚡</div>
-              <h3 className="font-semibold text-foreground text-sm">Instant Setup</h3>
-              <p className="text-xs text-muted-foreground">No configuration needed</p>
-            </div>
-            <div className="p-6 rounded-lg bg-card border border-border space-y-2">
-              <div className="text-2xl">👥</div>
-              <h3 className="font-semibold text-foreground text-sm">Real-time Sync</h3>
-              <p className="text-xs text-muted-foreground">See votes instantly</p>
-            </div>
-            <div className="p-6 rounded-lg bg-card border border-border space-y-2">
-              <div className="text-2xl">🎯</div>
-              <h3 className="font-semibold text-foreground text-sm">Built for Teams</h3>
-              <p className="text-xs text-muted-foreground">Unlimited participants</p>
-            </div>
-          </div>
         </div>
       </main>
 
