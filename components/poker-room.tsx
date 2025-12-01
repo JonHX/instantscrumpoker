@@ -728,7 +728,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
           </section>
 
           {/* Select Final Outcome - Moved above Previous Estimates */}
-          {(!isVotingOpen || isCleanSweep) && (
+          {!isVotingOpen && (
             <section aria-label="Select final outcome">
               <Card className="bg-card border-border p-3 space-y-2 w-full">
                 <h3 className="text-sm font-bold text-foreground">Select Final Outcome</h3>

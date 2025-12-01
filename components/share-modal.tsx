@@ -57,10 +57,10 @@ export function ShareModal({ roomId, roomName, onClose }: ShareModalProps) {
             <p className="text-xs font-medium text-muted-foreground mb-2">ROOM CODE</p>
             <div className="flex items-center gap-2">
               <code className="flex-1 bg-secondary border border-border rounded-lg p-3 text-accent font-mono font-bold text-center text-lg">
-                {roomName || roomId.toUpperCase()}
+                {roomId.toUpperCase()}
               </code>
               <Button
-                onClick={() => handleCopy(roomName || roomId.toUpperCase())}
+                onClick={() => handleCopy(roomId.toUpperCase())}
                 size="sm"
                 variant="outline"
                 className="border-border bg-transparent hover:bg-secondary"
