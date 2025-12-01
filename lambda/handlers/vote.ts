@@ -107,13 +107,13 @@ export const handler = async (
       })
     );
 
-    // Broadcast vote event
+    // Broadcast vote event (without revealing the estimate)
     if (WS_ENDPOINT) {
       await broadcastToRoom(WS_ENDPOINT, roomId, {
         type: "vote",
         participantId,
-        estimate,
         voted: true,
+        // Don't send estimate - votes should remain hidden until revealed
       });
     }
 

@@ -52,10 +52,10 @@ export function ShareModal({ roomId, roomName, onClose }: ShareModalProps) {
             <p className="text-xs font-medium text-muted-foreground mb-2">ROOM CODE</p>
             <div className="flex items-center gap-2">
               <code className="flex-1 bg-secondary border border-border rounded-lg p-3 text-accent font-mono font-bold text-center text-lg">
-                {roomId.split("-").pop()?.toUpperCase() || roomId.slice(-4).toUpperCase()}
+                {roomName || roomId.split("-").pop()?.toUpperCase() || roomId.slice(-4).toUpperCase()}
               </code>
               <Button
-                onClick={() => handleCopy(roomId.split("-").pop()?.toUpperCase() || roomId.slice(-4).toUpperCase())}
+                onClick={() => handleCopy(roomName || roomId.split("-").pop()?.toUpperCase() || roomId.slice(-4).toUpperCase())}
                 size="sm"
                 variant="outline"
                 className="border-border bg-transparent hover:bg-secondary"

@@ -12,9 +12,10 @@ interface Participant {
 
 interface ParticipantsListProps {
   participants: Participant[]
+  isVotingOpen?: boolean
 }
 
-export function ParticipantsList({ participants }: ParticipantsListProps) {
+export function ParticipantsList({ participants, isVotingOpen = true }: ParticipantsListProps) {
   const votedCount = participants.filter((p) => p.voted).length
 
   return (
@@ -39,7 +40,8 @@ export function ParticipantsList({ participants }: ParticipantsListProps) {
             <div className="flex items-center gap-2">
               {participant.voted ? (
                 <>
-                  {participant.vote && <span className="text-xs font-bold text-accent">{participant.vote}</span>}
+                  {/* Only show vote value if voting is closed (votes revealed) */}
+                  {!isVotingOpen && participant.vote && <span className="text-xs font-bold text-accent">{participant.vote}</span>}
                   <CheckCircle2 className="w-4 h-4 text-accent flex-shrink-0" />
                   <span className="text-xs font-semibold text-accent">Voted</span>
                 </>

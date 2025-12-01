@@ -71,12 +71,14 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
       setRoomName(data.name)
 
       // Map participants from room data to include vote status
+      // Only include vote values if voting is closed (votes revealed)
       if (data.participants) {
         const mappedParticipants = data.participants.map((p: any) => ({
           id: p.id,
           name: p.name,
           voted: !!p.vote,
-          vote: p.vote,
+          // Only include vote value if voting is closed (will be set after reveal)
+          vote: !isVotingOpen ? p.vote : undefined,
         }))
         setParticipants(mappedParticipants)
       }
@@ -88,7 +90,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
     } catch (error) {
       console.error("Error fetching room data:", error)
     }
-  }, [roomId])
+  }, [roomId, isVotingOpen])
 
   // Auto-join if name exists in localStorage for this room (only on mount)
   useEffect(() => {
@@ -101,27 +103,60 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
       autoJoinAttemptedRef.current = true
       setIsJoining(true)
       
-      // Auto-join with saved name
+      // Auto-join with saved name - check if already a participant first
       const autoJoin = async () => {
         try {
           const trimmedName = savedName.trim()
           // Ensure name is saved to localStorage (in case it wasn't before)
           localStorage.setItem(`scrumpoker-name-${roomId}`, trimmedName)
           
-          const { participantId: newParticipantId } = await joinRoom(roomId, { name: trimmedName })
-          setParticipantId(newParticipantId)
-
-          const newParticipant: Participant = {
-            id: newParticipantId,
-            name: trimmedName,
-            voted: false,
-          }
-          setParticipants([newParticipant])
-          setHasJoined(true)
-          setUserName(trimmedName) // Ensure userName state matches
+          // First, fetch room data to check if user is already a participant
+          const roomData = await getRoom(roomId)
+          setRoomName(roomData.name)
           
-          // Fetch room data
-          await fetchRoomData()
+          // Check if a participant with this name already exists
+          const existingParticipant = roomData.participants?.find(
+            (p: any) => p.name?.trim().toLowerCase() === trimmedName.toLowerCase()
+          )
+          
+          if (existingParticipant) {
+            // User already exists - restore their state
+            setParticipantId(existingParticipant.id)
+            setHasJoined(true)
+            setUserName(trimmedName)
+            
+            // Map participants from room data
+            if (roomData.participants) {
+              const mappedParticipants = roomData.participants.map((p: any) => ({
+                id: p.id,
+                name: p.name,
+                voted: !!p.vote,
+                vote: p.vote,
+              }))
+              setParticipants(mappedParticipants)
+            }
+            
+            // Load previous estimates if available
+            if ((roomData as any).previousEstimates) {
+              setPreviousEstimates((roomData as any).previousEstimates)
+            }
+          } else {
+            // User doesn't exist - join as new participant
+            const { participantId: newParticipantId } = await joinRoom(roomId, { name: trimmedName })
+            setParticipantId(newParticipantId)
+
+            const newParticipant: Participant = {
+              id: newParticipantId,
+              name: trimmedName,
+              voted: false,
+            }
+            setParticipants([newParticipant])
+            setHasJoined(true)
+            setUserName(trimmedName)
+            
+            // Fetch room data after joining
+            await fetchRoomData()
+          }
         } catch (error) {
           console.error("Error auto-joining room:", error)
           // If auto-join fails, clear the saved name and show join screen
@@ -154,10 +189,11 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
             try {
               const data = JSON.parse(event.data)
               if (data.type === "vote") {
+                // Only update voted status, NOT the actual vote (votes remain hidden)
                 setParticipants((prev) =>
                   prev.map((p) =>
                     p.id === data.participantId
-                      ? { ...p, vote: data.estimate, voted: true }
+                      ? { ...p, voted: true }
                       : p
                   )
                 )
@@ -165,8 +201,9 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
                 // Refresh room data when someone joins
                 fetchRoomData()
               } else if (data.type === "reveal") {
-                // Reveal votes for all participants
+                // Reveal votes for all participants - fetch room data to get all votes
                 setIsVotingOpen(false)
+                fetchRoomData() // Fetch to get all revealed votes
               } else if (data.type === "nextEstimate") {
                 // Move to next estimate - reset voting state
                 setCurrentVote(null)
@@ -281,10 +318,12 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
 
   const handleVote = async (value: string) => {
     setCurrentVote(value)
+    // Only update local state for current user - don't show vote to others yet
     setParticipants(participants.map((p) => (p.id === participantId ? { ...p, vote: value, voted: true } : p)))
 
     try {
       await submitVote(roomId, { participantId, estimate: value })
+      // Vote is submitted but not visible to others until revealed
     } catch (error) {
       console.error("Error submitting vote:", error)
     }
@@ -313,7 +352,8 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
     try {
       // Call API to broadcast reveal to all participants
       await revealVotes(roomId)
-      // Local state update will happen via WebSocket message
+      // Fetch room data to get all revealed votes
+      await fetchRoomData()
       setIsVotingOpen(false)
       const { isCleanSweep } = getVoteStats()
       if (isCleanSweep) {
@@ -428,9 +468,9 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
   const votedCount = participants.filter((p) => p.voted).length
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <>
       {showConfetti && <ConfettiCannon />}
-      {showShareModal && <ShareModal roomId={roomId} roomName={roomName} onClose={() => setShowShareModal(false)} />}
+      {showShareModal && <ShareModal roomId={roomId} roomName={roomName || roomId} onClose={() => setShowShareModal(false)} />}
       <audio
         ref={audioRef}
         src="data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA=="
@@ -488,7 +528,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
         </div>
       </nav>
 
-      <main id="main-content" className="flex-1 px-4 md:px-8 py-8" role="main">
+      <main id="main-content" className="min-h-screen bg-background px-4 md:px-8 py-8" role="main">
         <div className="grid lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
@@ -683,10 +723,10 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
 
         {/* Sidebar - Participants */}
         <aside aria-label="Participants list">
-          <ParticipantsList participants={participants} />
+          <ParticipantsList participants={participants} isVotingOpen={isVotingOpen} />
         </aside>
       </div>
       </main>
-    </div>
+    </>
   )
 }
