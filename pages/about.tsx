@@ -63,7 +63,7 @@ export default function About() {
             <div className="pt-6 border-t border-border">
               <h2 className="text-2xl font-bold text-foreground mb-4">Why We Built This</h2>
               <p className="text-muted-foreground leading-relaxed">
-                As agile practitioners, we needed a tool that our distributed teams could use instantly without friction. 
+                As a software engineer who has led multiple teams, I needed a tool that our distributed teams could use instantly without friction. 
                 We wanted something that focused on the core experience: creating a room, voting, and reaching consensus. 
                 That's it. No bells, no whistles, no distractions.
               </p>
