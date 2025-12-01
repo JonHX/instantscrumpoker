@@ -44,11 +44,11 @@ export function Nav() {
             <Zap className="w-5 h-5 text-accent-foreground" />
           </div>
           <Image
-            src="/logo2.png"
+            src={isDark ? "/logo-invert.png" : "/logo2.png"}
             alt="InstantScrumPoker logo"
             width={200}
             height={40}
-            className="h-10 w-auto"
+            className="h-10 w-auto relative -left-[10px]"
             priority
           />
         </Link>
