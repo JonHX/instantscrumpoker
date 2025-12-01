@@ -35,8 +35,13 @@ export function ShareModal({ roomId, roomName, onClose }: ShareModalProps) {
       <Card className="bg-card border-border p-8 space-y-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-foreground">Share Room</h2>
-          <button onClick={onClose} className="p-1 hover:bg-secondary rounded-lg transition-colors">
-            <X className="w-5 h-5 text-foreground" />
+          <button 
+            onClick={onClose} 
+            className="p-1 hover:bg-secondary rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+            aria-label="Close share modal"
+            type="button"
+          >
+            <X className="w-5 h-5 text-foreground" aria-hidden="true" />
           </button>
         </div>
 

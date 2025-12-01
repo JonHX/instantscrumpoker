@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect, useCallback } from "react"
+import React, { useState, useRef, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -564,7 +564,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
           <div className="flex items-center gap-2">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg border border-border hover:bg-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+              className="p-2 rounded-lg border border-border hover:bg-secondary transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
               aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
               type="button"
             >
@@ -590,9 +590,24 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
           {isDraw && !isVotingOpen && (
             <Card className="bg-gradient-to-r from-orange-500/20 to-yellow-500/20 border-2 border-orange-500 p-4 text-center">
               <p className="text-xl font-bold text-orange-600 dark:text-orange-400">⚔️ DRAW! ⚔️</p>
-              <p className="text-3xl font-bold text-foreground mt-1">
-                {drawValues.join(" vs ")}
-              </p>
+              <div className="flex items-center justify-center gap-2 mt-1">
+                {drawValues.map((value, index) => (
+                  <React.Fragment key={value}>
+                    <span 
+                      className="text-5xl font-extrabold text-foreground"
+                      style={{ 
+                        textShadow: '0 2px 8px rgba(0,0,0,0.15), 0 4px 16px rgba(249,115,22,0.2)',
+                        filter: 'drop-shadow(0 0 2px rgba(249,115,22,0.3))'
+                      }}
+                    >
+                      {value}
+                    </span>
+                    {index < drawValues.length - 1 && (
+                      <span className="text-sm font-medium text-muted-foreground lowercase mx-1">vs</span>
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">Teams are tied - time to discuss!</p>
             </Card>
           )}
@@ -751,7 +766,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
                       <button
                         key={value}
                         onClick={() => setSelectedOutcome(value)}
-                        className={`p-3 rounded-lg border-2 font-bold text-lg transition-all focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 ${
+                        className={`p-3 rounded-lg border-2 font-bold text-lg transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 ${
                           selectedOutcome === value
                             ? "bg-accent border-accent text-accent-foreground ring-2 ring-accent/30"
                             : "bg-secondary border-border text-foreground hover:border-accent/50"
