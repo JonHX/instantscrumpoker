@@ -733,15 +733,15 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
               <Card className="bg-card border-border p-3 space-y-2 w-full">
                 <h3 className="text-sm font-bold text-foreground">Select Final Outcome</h3>
                 <p className="text-xs text-muted-foreground">Choose the final estimate value before proceeding</p>
-                <div className="grid grid-cols-3 md:grid-cols-5 gap-1.5" role="group" aria-label="Select final outcome">
+                <div className="flex flex-wrap justify-center gap-1.5" role="group" aria-label="Select final outcome">
                   {FIBONACCI.map((value) => (
                     <button
                       key={value}
                       onClick={() => setSelectedOutcome(value)}
-                      className={`p-2 rounded-lg border-2 font-bold text-base transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 ${
+                      className={`px-3 py-2 rounded-lg border-2 font-bold text-base transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 ${
                         selectedOutcome === value
-                          ? "bg-accent border-accent text-accent-foreground ring-2 ring-accent/30"
-                          : "bg-secondary border-border text-foreground hover:border-accent/50"
+                          ? "bg-accent border-accent text-accent-foreground ring-2 ring-accent/30 scale-110 animate-in zoom-in-95 duration-200"
+                          : "bg-secondary border-border text-foreground hover:border-accent/50 hover:scale-105"
                       }`}
                       aria-pressed={selectedOutcome === value}
                       aria-label={`Select ${value} as final outcome`}
