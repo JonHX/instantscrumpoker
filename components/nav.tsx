@@ -44,14 +44,28 @@ export function Nav() {
           </div>
           <span className="text-lg font-bold text-foreground">InstantScrumPoker</span>
         </Link>
-        <button
-          onClick={toggleTheme}
-          className="p-2 rounded-lg border border-border hover:bg-secondary transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
-          aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
-          type="button"
-        >
-          {isDark ? <Sun className="w-5 h-5 text-foreground" aria-hidden="true" /> : <Moon className="w-5 h-5 text-foreground" aria-hidden="true" />}
-        </button>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/what-is-scrum-poker"
+            className="text-sm font-medium text-foreground hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 rounded px-2 py-1"
+          >
+            What is Scrum Poker?
+          </Link>
+          <Link
+            href="/about"
+            className="text-sm font-medium text-foreground hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 rounded px-2 py-1"
+          >
+            About
+          </Link>
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg border border-border hover:bg-secondary transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+            aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+            type="button"
+          >
+            {isDark ? <Sun className="w-5 h-5 text-foreground" aria-hidden="true" /> : <Moon className="w-5 h-5 text-foreground" aria-hidden="true" />}
+          </button>
+        </div>
       </div>
     </nav>
   )
