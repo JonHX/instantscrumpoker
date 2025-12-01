@@ -37,18 +37,17 @@ export function Nav() {
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         <Link 
           href="/" 
-          className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 rounded-lg"
+          className="flex items-center hover:opacity-80 transition-opacity cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 rounded-lg"
           aria-label="InstantScrumPoker home"
         >
           <Image
             src="/logo2.png"
             alt="InstantScrumPoker logo"
-            width={32}
-            height={32}
-            className="w-8 h-8"
+            width={200}
+            height={40}
+            className="h-10 w-auto"
             priority
           />
-          <span className="text-lg font-bold text-foreground">InstantScrumPoker</span>
         </Link>
         <div className="flex items-center gap-4">
           <Link
