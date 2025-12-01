@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Zap, Moon, Sun } from "lucide-react"
+import Image from "next/image"
+import { Moon, Sun } from "lucide-react"
 
 export function Nav() {
   const [isDark, setIsDark] = useState(false)
@@ -39,9 +40,14 @@ export function Nav() {
           className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 rounded-lg"
           aria-label="InstantScrumPoker home"
         >
-          <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center" aria-hidden="true">
-            <Zap className="w-5 h-5 text-accent-foreground" />
-          </div>
+          <Image
+            src="/logo2.png"
+            alt="InstantScrumPoker logo"
+            width={32}
+            height={32}
+            className="w-8 h-8"
+            priority
+          />
           <span className="text-lg font-bold text-foreground">InstantScrumPoker</span>
         </Link>
         <div className="flex items-center gap-4">
