@@ -577,24 +577,24 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
       <main id="main-content" className="min-h-screen bg-background px-4 md:px-8 py-8" role="main">
         <div className="grid lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-3">
           {/* Clean Sweep Message */}
           {isCleanSweep && !isVotingOpen && !isDraw && (
-            <Card className="bg-gradient-to-r from-accent/20 to-accent/10 border-2 border-accent p-4 text-center">
-              <p className="text-xl font-bold text-accent">🎉 Clean Sweep! All Agreed 🎉</p>
-              <p className="text-sm text-muted-foreground mt-1">Everyone selected {mostCommon?.[0]}</p>
+            <Card className="bg-gradient-to-r from-accent/20 to-accent/10 border-2 border-accent p-2 text-center">
+              <p className="text-base font-bold text-accent">🎉 Clean Sweep! All Agreed 🎉</p>
+              <p className="text-xs text-muted-foreground">Everyone selected {mostCommon?.[0]}</p>
             </Card>
           )}
 
           {/* Draw Message - Shows above timer */}
           {isDraw && !isVotingOpen && (
-            <Card className="bg-gradient-to-r from-orange-500/20 to-yellow-500/20 border-2 border-orange-500 p-4 text-center">
-              <p className="text-xl font-bold text-orange-600 dark:text-orange-400">⚔️ DRAW! ⚔️</p>
-              <div className="flex items-center justify-center gap-2 mt-1">
+            <Card className="bg-gradient-to-r from-orange-500/20 to-yellow-500/20 border-2 border-orange-500 p-2 text-center">
+              <p className="text-base font-bold text-orange-600 dark:text-orange-400">⚔️ DRAW! ⚔️</p>
+              <div className="flex items-center justify-center gap-2">
                 {drawValues.map((value, index) => (
                   <React.Fragment key={value}>
                     <span 
-                      className="text-5xl font-extrabold text-foreground"
+                      className="text-3xl font-extrabold text-foreground"
                       style={{ 
                         textShadow: '0 2px 8px rgba(0,0,0,0.15), 0 4px 16px rgba(249,115,22,0.2)',
                         filter: 'drop-shadow(0 0 2px rgba(249,115,22,0.3))'
@@ -603,21 +603,21 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
                       {value}
                     </span>
                     {index < drawValues.length - 1 && (
-                      <span className="text-sm font-medium text-muted-foreground lowercase mx-1">vs</span>
+                      <span className="text-xs font-medium text-muted-foreground lowercase mx-1">vs</span>
                     )}
                   </React.Fragment>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Teams are tied - time to discuss!</p>
+              <p className="text-xs text-muted-foreground">Teams are tied - time to discuss!</p>
             </Card>
           )}
 
           {/* Timer & Discussion */}
           {discussionMode && (
             <section aria-labelledby="discussion-heading">
-              <Card className="bg-card border-border p-6">
-                <div className="text-center space-y-4">
-                  <h2 id="discussion-heading" className="text-lg font-semibold text-foreground">Discussion Round</h2>
+              <Card className="bg-card border-border p-3">
+                <div className="text-center space-y-2">
+                  <h2 id="discussion-heading" className="text-sm font-semibold text-foreground">Discussion Round</h2>
                   <Timer
                     seconds={timerSeconds}
                     isRunning={isTimerRunning}
@@ -633,17 +633,17 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
 
           {/* Voting Phase */}
           <section aria-labelledby="voting-heading">
-            <Card className="bg-card border-border p-8 space-y-6">
+            <Card className="bg-card border-border p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 id="voting-heading" className="text-xl font-bold text-foreground">Estimate Points</h2>
-                  <p className="text-sm text-muted-foreground mt-1" role="status" aria-live="polite">
+                  <h2 id="voting-heading" className="text-lg font-bold text-foreground">Estimate Points</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5" role="status" aria-live="polite">
                     {isVotingOpen ? (currentVote ? "Vote submitted - click again to change or unselect" : "Select your estimate") : "Votes revealed"}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-muted-foreground">Votes In</p>
-                  <p className="text-2xl font-bold text-accent" aria-live="polite" aria-atomic="true">
+                  <p className="text-xs text-muted-foreground">Votes In</p>
+                  <p className="text-xl font-bold text-accent" aria-live="polite" aria-atomic="true">
                     {votedCount}/{participants.length}
                   </p>
                 </div>
@@ -659,7 +659,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
                   />
                 </div>
               ) : (
-                <div className="space-y-3" role="list" aria-label="Vote results">
+                <div className="space-y-2" role="list" aria-label="Vote results">
                   {participants.map((p) => {
                     const isOutlier = outliers.some((o) => o.id === p.id)
                     const isTopVote = p.vote === mostCommon?.[0]
@@ -668,7 +668,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
                       <div
                         key={p.id}
                         role="listitem"
-                        className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
+                        className={`flex items-center justify-between p-2 rounded-lg border-2 transition-all ${
                           isOutlier
                             ? "bg-destructive/10 border-destructive/50"
                             : isTopVote
@@ -676,13 +676,13 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
                               : "bg-secondary border-border"
                         }`}
                       >
-                        <span className="font-medium text-foreground">{p.name}</span>
+                        <span className="text-sm font-medium text-foreground">{p.name}</span>
                         <div className="flex items-center gap-2">
-                          <span className={`font-bold text-lg ${isOutlier ? "text-destructive" : "text-accent"}`} aria-label={`${p.name} voted ${p.vote || "no vote"}`}>
+                          <span className={`font-bold text-base ${isOutlier ? "text-destructive" : "text-accent"}`} aria-label={`${p.name} voted ${p.vote || "no vote"}`}>
                             {p.vote || "—"}
                           </span>
                           {isTopVote && mostCommon?.[1]! > 1 && (
-                            <span className="text-xs font-bold px-2 py-1 rounded-full bg-accent/20 text-accent" aria-label="Most chosen vote">
+                            <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-accent/20 text-accent" aria-label="Most chosen vote">
                               Most chosen
                             </span>
                           )}
@@ -696,45 +696,13 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
             </Card>
           </section>
 
-          {/* Previous Estimates */}
-          {previousEstimates.length > 0 && (
-            <section aria-labelledby="previous-estimates-heading">
-              <Card className="bg-card border-border p-6 space-y-4">
-                <h3 id="previous-estimates-heading" className="text-base font-bold text-foreground">Previous Estimates</h3>
-                <div className="space-y-2" role="list" aria-label="Previous estimates">
-                  {previousEstimates.map((estimate, index) => (
-                    <div
-                      key={estimate.story_id}
-                      role="listitem"
-                      className="flex items-center justify-between p-3 rounded-lg bg-secondary border border-border"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-bold text-accent" aria-label={`Estimate number ${previousEstimates.length - index}`}>#{previousEstimates.length - index}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {Object.entries(estimate.votes || {}).map(([pid, vote]: [string, any]) => (
-                          <span key={pid} className="text-sm font-medium text-muted-foreground" aria-label={`Vote: ${vote.estimate}`}>
-                            {vote.estimate}
-                          </span>
-                        ))}
-                        {estimate.outcome && (
-                          <span className="font-bold text-accent ml-2" aria-label={`Final outcome: ${estimate.outcome}`}>→ {estimate.outcome}</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            </section>
-          )}
-
           {/* Action Buttons */}
           <section aria-label="Room actions">
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2">
               {isVotingOpen && currentVote && (
                 <Button
                   onClick={handleRevealVotes}
-                  className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+                  className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-4 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
                   aria-label="Reveal all votes"
                 >
                   Reveal Votes
@@ -756,41 +724,76 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
                   )}
                 </>
               )}
-
-              {(!isVotingOpen || isCleanSweep) && (
-                <Card className="bg-card border-border p-6 space-y-4 w-full">
-                  <h3 className="text-base font-bold text-foreground">Select Final Outcome</h3>
-                  <p className="text-sm text-muted-foreground">Choose the final estimate value before proceeding to the next round</p>
-                  <div className="grid grid-cols-3 md:grid-cols-5 gap-2" role="group" aria-label="Select final outcome">
-                    {FIBONACCI.map((value) => (
-                      <button
-                        key={value}
-                        onClick={() => setSelectedOutcome(value)}
-                        className={`p-3 rounded-lg border-2 font-bold text-lg transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 ${
-                          selectedOutcome === value
-                            ? "bg-accent border-accent text-accent-foreground ring-2 ring-accent/30"
-                            : "bg-secondary border-border text-foreground hover:border-accent/50"
-                        }`}
-                        aria-pressed={selectedOutcome === value}
-                        aria-label={`Select ${value} as final outcome`}
-                        type="button"
-                      >
-                        {value}
-                      </button>
-                    ))}
-                  </div>
-                  <Button
-                    onClick={handleNextEstimate}
-                    disabled={!selectedOutcome}
-                    className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
-                    aria-label={selectedOutcome ? "Proceed to next estimate" : "Select an outcome first"}
-                  >
-                    Next Estimate
-                  </Button>
-                </Card>
-              )}
             </div>
           </section>
+
+          {/* Select Final Outcome - Moved above Previous Estimates */}
+          {(!isVotingOpen || isCleanSweep) && (
+            <section aria-label="Select final outcome">
+              <Card className="bg-card border-border p-3 space-y-2 w-full">
+                <h3 className="text-sm font-bold text-foreground">Select Final Outcome</h3>
+                <p className="text-xs text-muted-foreground">Choose the final estimate value before proceeding</p>
+                <div className="grid grid-cols-3 md:grid-cols-5 gap-1.5" role="group" aria-label="Select final outcome">
+                  {FIBONACCI.map((value) => (
+                    <button
+                      key={value}
+                      onClick={() => setSelectedOutcome(value)}
+                      className={`p-2 rounded-lg border-2 font-bold text-base transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 ${
+                        selectedOutcome === value
+                          ? "bg-accent border-accent text-accent-foreground ring-2 ring-accent/30"
+                          : "bg-secondary border-border text-foreground hover:border-accent/50"
+                      }`}
+                      aria-pressed={selectedOutcome === value}
+                      aria-label={`Select ${value} as final outcome`}
+                      type="button"
+                    >
+                      {value}
+                    </button>
+                  ))}
+                </div>
+                <Button
+                  onClick={handleNextEstimate}
+                  disabled={!selectedOutcome}
+                  className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-4 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+                  aria-label={selectedOutcome ? "Proceed to next estimate" : "Select an outcome first"}
+                >
+                  Next Estimate
+                </Button>
+              </Card>
+            </section>
+          )}
+
+          {/* Previous Estimates */}
+          {previousEstimates.length > 0 && (
+            <section aria-labelledby="previous-estimates-heading">
+              <Card className="bg-card border-border p-3 space-y-2">
+                <h3 id="previous-estimates-heading" className="text-sm font-bold text-foreground">Previous Estimates</h3>
+                <div className="space-y-1.5" role="list" aria-label="Previous estimates">
+                  {previousEstimates.map((estimate, index) => (
+                    <div
+                      key={estimate.story_id}
+                      role="listitem"
+                      className="flex items-center justify-between p-2 rounded-lg bg-secondary border border-border"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-accent" aria-label={`Estimate number ${previousEstimates.length - index}`}>#{previousEstimates.length - index}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {Object.entries(estimate.votes || {}).map(([pid, vote]: [string, any]) => (
+                          <span key={pid} className="text-xs font-medium text-muted-foreground" aria-label={`Vote: ${vote.estimate}`}>
+                            {vote.estimate}
+                          </span>
+                        ))}
+                        {estimate.outcome && (
+                          <span className="text-sm font-bold text-accent ml-1" aria-label={`Final outcome: ${estimate.outcome}`}>→ {estimate.outcome}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </section>
+          )}
         </div>
 
         {/* Sidebar - Participants */}

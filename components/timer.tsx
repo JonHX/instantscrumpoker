@@ -41,10 +41,10 @@ export function Timer({ seconds, isRunning, onEnd, onExtend, onStart, onSetTime 
   const secs = timeLeft % 60
 
   return (
-    <div className="flex flex-col items-center justify-center gap-4">
-      <div className="flex items-center justify-center gap-3">
-        <Clock className="w-6 h-6 text-accent" />
-        <div className="text-5xl font-bold text-accent font-mono">
+    <div className="flex flex-col items-center justify-center gap-2">
+      <div className="flex items-center justify-center gap-2">
+        <Clock className="w-5 h-5 text-accent" />
+        <div className="text-3xl font-bold text-accent font-mono">
           {String(minutes).padStart(2, "0")}:{String(secs).padStart(2, "0")}
         </div>
       </div>
