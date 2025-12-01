@@ -11,6 +11,7 @@ import { ConfettiCannon } from "./confetti-cannon"
 import { ShareModal } from "./share-modal"
 import { Zap, LogOut, MessageSquare, Share2 } from "lucide-react"
 import { Nav } from "@/components/nav"
+import { Footer } from "@/components/footer"
 import { WS_ENDPOINT } from "@/lib/api-config"
 import { getRoom, joinRoom, submitVote, revealVotes, nextEstimate } from "@/lib/api"
 
@@ -760,6 +761,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
           />
         </aside>
       </div>
+      <Footer />
       </main>
     </>
   )
