@@ -70,21 +70,20 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
   const wsRef = useRef<WebSocket | null>(null)
   const autoJoinAttemptedRef = useRef(false)
 
-  const fetchRoomData = useCallback(async () => {
+  const fetchRoomData = useCallback(async (showVotes = false) => {
     try {
       // Load room data silently in background (non-blocking)
       const data = await getRoom(roomId)
       setRoomName(data.name)
 
       // Map participants from room data to include vote status
-      // Only include vote values if voting is closed (votes revealed)
       if (data.participants) {
         const mappedParticipants = data.participants.map((p: any) => ({
           id: p.id,
           name: p.name,
           voted: !!p.vote,
-          // Only include vote value if voting is closed (will be set after reveal)
-          vote: !isVotingOpen ? p.vote : undefined,
+          // Include vote value if explicitly showing votes or if voting is already closed
+          vote: (showVotes || !isVotingOpen) ? p.vote : undefined,
         }))
         setParticipants(mappedParticipants)
       }
@@ -101,7 +100,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
   // Auto-join if name exists in localStorage for this room (only on mount)
   useEffect(() => {
     // Only attempt auto-join once on mount
-    if (autoJoinAttemptedRef.current || hasJoined || isJoining) return
+    if (autoJoinAttemptedRef.current || hasJoined) return
     
     // Check localStorage for saved name for this specific room
     const savedName = localStorage.getItem(`scrumpoker-name-${roomId}`)
@@ -269,12 +268,17 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
       {} as Record<string, number>,
     )
 
-    const mostCommon = Object.entries(voteCounts).sort(([, a], [, b]) => b - a)[0]
+    const sortedVotes = Object.entries(voteCounts).sort(([, a], [, b]) => b - a)
+    const mostCommon = sortedVotes[0]
     const allVoted = participants.filter((p) => p.voted).length === participants.length
     const onlyOneValue = Object.keys(voteCounts).length === 1
     const isCleanSweep = allVoted && onlyOneValue && votes.length === participants.length
+    
+    // Check for draw: two or more values with the same highest count
+    const isDraw = sortedVotes.length >= 2 && sortedVotes[0][1] === sortedVotes[1][1]
+    const drawValues = isDraw ? sortedVotes.filter(([, count]) => count === sortedVotes[0][1]).map(([value]) => value) : []
 
-    return { voteCounts, mostCommon, isCleanSweep, votes }
+    return { voteCounts, mostCommon, isCleanSweep, votes, isDraw, drawValues }
   }
 
   const getOutliers = () => {
@@ -367,9 +371,9 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
     try {
       // Call API to broadcast reveal to all participants
       await revealVotes(roomId)
-      // Fetch room data to get all revealed votes
-      await fetchRoomData()
       setIsVotingOpen(false)
+      // Fetch room data to get all revealed votes (pass true to show votes)
+      await fetchRoomData(true)
       const { isCleanSweep } = getVoteStats()
       if (isCleanSweep) {
         setShowConfetti(true)
@@ -391,6 +395,11 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
 
   const handleExtendTimer = () => {
     setTimerSeconds((prev) => prev + 60)
+  }
+
+  const handleSetTimer = (seconds: number) => {
+    setTimerSeconds(seconds)
+    setIsTimerRunning(false)
   }
 
   const toggleTheme = () => {
@@ -489,7 +498,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
     )
   }
 
-  const { voteCounts, mostCommon, isCleanSweep } = getVoteStats()
+  const { voteCounts, mostCommon, isCleanSweep, isDraw, drawValues } = getVoteStats()
   const outliers = getOutliers()
   const votedCount = participants.filter((p) => p.voted).length
 
@@ -552,6 +561,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
                     onEnd={playSound}
                     onExtend={handleExtendTimer}
                     onStart={handleStartTimer}
+                    onSetTime={handleSetTimer}
                   />
                 </div>
               </Card>
@@ -559,10 +569,21 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
           )}
 
           {/* Clean Sweep Message */}
-          {isCleanSweep && !isVotingOpen && (
+          {isCleanSweep && !isVotingOpen && !isDraw && (
             <Card className="bg-gradient-to-r from-accent/20 to-accent/10 border-2 border-accent p-6 text-center">
               <p className="text-2xl font-bold text-accent">🎉 Clean Sweep! All Agreed 🎉</p>
               <p className="text-sm text-muted-foreground mt-2">Everyone selected {mostCommon?.[0]}</p>
+            </Card>
+          )}
+
+          {/* Draw Message */}
+          {isDraw && !isVotingOpen && (
+            <Card className="bg-gradient-to-r from-orange-500/20 to-yellow-500/20 border-2 border-orange-500 p-6 text-center">
+              <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">⚔️ DRAW! ⚔️</p>
+              <p className="text-3xl font-bold text-foreground mt-2">
+                {drawValues.join(" VS ")}
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">Teams are tied - time to discuss!</p>
             </Card>
           )}
 
