@@ -30,7 +30,7 @@ export default function Document() {
         
         {/* Favicon */}
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <link rel="icon" type="image/png" href="/icon-light-32x32.png" />
+        <link rel="alternate icon" type="image/png" href="/icon-light-32x32.png" />
         <link rel="apple-touch-icon" href="/apple-icon.png" />
         
         {/* Google tag (gtag.js) */}
