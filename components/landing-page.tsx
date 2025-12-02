@@ -32,9 +32,7 @@ export function LandingPage({ onCreateRoom, onJoinRoom }: LandingPageProps) {
     
     // Only allow letters, numbers, and spaces
     const filtered = value.replace(/[^a-zA-Z0-9\s]/g, '')
-    // Replace spaces with hyphens in real-time
-    const formatted = filtered.replace(/\s/g, '-')
-    setRoomName(formatted)
+    setRoomName(filtered)
   }
 
   const handleCreateRoom = async () => {
