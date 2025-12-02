@@ -57,7 +57,7 @@ export function Nav() {
             href="/what-is-scrum-poker"
             className="text-sm font-medium text-foreground hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 rounded px-2 py-1"
           >
-            <span className="md:hidden">What's scrum poker</span>
+            <span className="md:hidden">Guide</span>
             <span className="hidden md:inline">What is Scrum Poker?</span>
           </Link>
           <Link
