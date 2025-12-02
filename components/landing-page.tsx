@@ -23,12 +23,26 @@ export function LandingPage({ onCreateRoom, onJoinRoom }: LandingPageProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [showJoinModal, setShowJoinModal] = useState(false)
   const [joinError, setJoinError] = useState("")
+  const [hasInvalidChars, setHasInvalidChars] = useState(false)
+
+  const handleRoomNameChange = (value: string) => {
+    // Check if input contains invalid characters (symbols)
+    const hasSymbols = /[^a-zA-Z0-9\s]/.test(value)
+    setHasInvalidChars(hasSymbols)
+    
+    // Only allow letters, numbers, and spaces
+    const filtered = value.replace(/[^a-zA-Z0-9\s]/g, '')
+    // Replace spaces with hyphens in real-time
+    const formatted = filtered.replace(/\s/g, '-')
+    setRoomName(formatted)
+  }
 
   const handleCreateRoom = async () => {
-    if (roomName.trim()) {
+    const formattedName = roomName.trim()
+    if (formattedName) {
       setIsLoading(true)
       try {
-        const { roomId } = await createRoom({ name: roomName })
+        const { roomId } = await createRoom({ name: formattedName })
         // Use window.location for full page navigation (works with static export)
         // This ensures S3 serves index.html and Next.js client router handles it
         window.location.href = `/rooms/${roomId}/`
@@ -117,12 +131,22 @@ export function LandingPage({ onCreateRoom, onJoinRoom }: LandingPageProps) {
                 id="room-name-input"
                 placeholder="e.g., Sprint 25 Estimation"
                 value={roomName}
-                onChange={(e) => setRoomName(e.target.value)}
+                onChange={(e) => handleRoomNameChange(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && handleCreateRoom()}
-                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
+                className={`bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                  hasInvalidChars 
+                    ? "border-destructive focus:ring-destructive" 
+                    : "focus:ring-accent"
+                }`}
                 aria-required="true"
                 aria-describedby="room-name-description"
+                aria-invalid={hasInvalidChars}
               />
+              {hasInvalidChars && (
+                <p className="text-sm text-destructive" role="alert">
+                  Symbols are not allowed. Only letters, numbers, and spaces are permitted.
+                </p>
+              )}
               <p id="room-name-description" className="sr-only">Enter a name for your estimation room</p>
             </div>
 
