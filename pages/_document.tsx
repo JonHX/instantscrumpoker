@@ -28,9 +28,8 @@ export default function Document() {
         <meta property="twitter:description" content="Free, simple, and ad-free scrum poker tool for agile teams. No sign-ups required. Estimate user stories together in real-time." />
         <meta property="twitter:image" content="https://instantscrumpoker.com/logo2.png" />
         
-        {/* Favicon */}
+        {/* Favicon - SVG only for modern browsers */}
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <link rel="alternate icon" type="image/png" href="/icon-light-32x32.png" />
         <link rel="apple-touch-icon" href="/apple-icon.png" />
         
         {/* Google tag (gtag.js) */}
