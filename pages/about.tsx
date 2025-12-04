@@ -1,3 +1,4 @@
+import Head from "next/head"
 import { Nav } from "@/components/nav"
 import { Footer } from "@/components/footer"
 import { Card } from "@/components/ui/card"
@@ -5,8 +6,12 @@ import { Zap, Heart, Shield, Sparkles } from "lucide-react"
 
 export default function About() {
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Nav />
+    <>
+      <Head>
+        <title>About - Instant Scrum Poker</title>
+      </Head>
+      <div className="min-h-screen bg-background flex flex-col">
+        <Nav />
       <main className="flex-1 px-4 py-12" role="main">
         <div className="max-w-4xl mx-auto space-y-8">
           <header className="text-center space-y-4">
@@ -72,7 +77,8 @@ export default function About() {
         </div>
       </main>
       <Footer />
-    </div>
+      </div>
+    </>
   )
 }
 

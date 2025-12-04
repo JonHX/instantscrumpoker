@@ -1,6 +1,7 @@
 import "@/styles/globals.css"
 import type { AppProps } from "next/app"
 import { useEffect } from "react"
+import Head from "next/head"
 import { Inter } from "next/font/google"
 
 const inter = Inter({
@@ -22,9 +23,14 @@ export default function App({ Component, pageProps }: AppProps) {
   }, [])
 
   return (
-    <div className={inter.variable}>
-      <Component {...pageProps} />
-    </div>
+    <>
+      <Head>
+        <title>Instant Scrum Poker - Free Scrum Poker Planning Tool</title>
+      </Head>
+      <div className={inter.variable}>
+        <Component {...pageProps} />
+      </div>
+    </>
   )
 }
 

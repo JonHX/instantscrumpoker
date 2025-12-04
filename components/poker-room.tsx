@@ -206,9 +206,52 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
                 // Refresh room data when someone joins
                 fetchRoomData()
               } else if (data.type === "reveal") {
-                // Reveal votes for all participants - fetch room data to get all votes
-                setIsVotingOpen(false)
-                fetchRoomData() // Fetch to get all revealed votes
+                // Reveal votes for all participants - fetch room data and calculate stats
+                try {
+                  const roomData = await getRoom(roomId)
+                  
+                  if (roomData.participants) {
+                    const mappedParticipants = roomData.participants.map((p: any) => ({
+                      id: p.id,
+                      name: p.name,
+                      voted: !!p.vote,
+                      vote: p.vote,
+                    }))
+                    
+                    // Calculate stats from the fetched data (same logic as handleRevealVotes)
+                    const votes = mappedParticipants.filter((p: any) => p.vote && p.vote !== "?").map((p: any) => p.vote!)
+                    const voteCounts = votes.reduce(
+                      (acc: Record<string, number>, vote: string) => {
+                        acc[vote] = (acc[vote] || 0) + 1
+                        return acc
+                      },
+                      {} as Record<string, number>,
+                    )
+                    const allVoted = mappedParticipants.filter((p: any) => p.voted).length === mappedParticipants.length
+                    const onlyOneValue = Object.keys(voteCounts).length === 1
+                    const isCleanSweep = allVoted && onlyOneValue && votes.length === mappedParticipants.length
+                    
+                    // Batch all state updates together
+                    setParticipants(mappedParticipants)
+                    setIsVotingOpen(false)
+                    
+                    if (isCleanSweep) {
+                      setShowConfetti(true)
+                      setDiscussionMode(false)
+                    } else {
+                      setDiscussionMode(true)
+                      setTimerSeconds(180)
+                      setIsTimerRunning(false)
+                    }
+                  }
+                  
+                  playSound()
+                } catch (error) {
+                  console.error("Error handling reveal event:", error)
+                  // Fallback to simple fetch
+                  setIsVotingOpen(false)
+                  fetchRoomData(true)
+                }
               } else if (data.type === "nextEstimate") {
                 // Move to next estimate - reset voting state
                 setCurrentVote(null)
@@ -613,38 +656,121 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
                   />
                 </div>
               ) : (
-                <div className="space-y-2" role="list" aria-label="Vote results">
-                  {participants.map((p) => {
-                    const isOutlier = outliers.some((o) => o.id === p.id)
-                    const isTopVote = p.vote === mostCommon?.[0]
-
-                    return (
-                      <div
-                        key={p.id}
-                        role="listitem"
-                        className={`flex items-center justify-between p-2 rounded-lg border-2 transition-all ${
-                          isOutlier
-                            ? "bg-destructive/10 border-destructive/50"
-                            : isTopVote
-                              ? "bg-accent/10 border-accent ring-2 ring-accent/30"
-                              : "bg-secondary border-border"
-                        }`}
-                      >
-                        <span className="text-sm font-medium text-foreground">{p.name}</span>
-                        <div className="flex items-center gap-2">
-                          <span className={`font-bold text-base ${isOutlier ? "text-destructive" : "text-accent"}`} aria-label={`${p.name} voted ${p.vote || "no vote"}`}>
-                            {p.vote || "—"}
-                          </span>
-                          {isTopVote && mostCommon?.[1]! > 1 && (
-                            <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-accent/20 text-accent" aria-label="Most chosen vote">
-                              Most chosen
-                            </span>
-                          )}
-                          {isOutlier && <span className="text-xs font-bold text-destructive" aria-label="Outlier vote">Outlier</span>}
+                <div className="space-y-3" role="list" aria-label="Vote results">
+                  {(() => {
+                    // Group participants by vote value
+                    const votesByValue = participants.reduce((acc, p) => {
+                      if (p.vote && p.vote !== "?") {
+                        if (!acc[p.vote]) acc[p.vote] = []
+                        acc[p.vote].push(p)
+                      }
+                      return acc
+                    }, {} as Record<string, typeof participants>)
+                    
+                    // Sort by count (highest first)
+                    const sortedVoteGroups = Object.entries(votesByValue)
+                      .map(([value, groupParticipants]) => ({
+                        value,
+                        count: groupParticipants.length,
+                        participants: groupParticipants,
+                      }))
+                      .sort((a, b) => b.count - a.count)
+                    
+                    // Determine if there's a tie for most votes
+                    const maxCount = sortedVoteGroups[0]?.count || 0
+                    const tiedGroups = sortedVoteGroups.filter(g => g.count === maxCount)
+                    const hasTie = tiedGroups.length > 1
+                    const isTopGroup = (count: number) => count === maxCount
+                    
+                    return sortedVoteGroups.map((group) => {
+                      const percentage = (group.count / participants.length) * 100
+                      const isTop = isTopGroup(group.count)
+                      const shouldShowMostChosen = isTop && group.count > 1 && !hasTie
+                      
+                      // Check if any participant in this group is an outlier
+                      const hasOutliers = group.participants.some(p => outliers.some(o => o.id === p.id))
+                      
+                      return (
+                        <div
+                          key={group.value}
+                          role="listitem"
+                          className={`rounded-lg border-2 overflow-hidden transition-all ${
+                            hasOutliers
+                              ? "border-destructive/50"
+                              : isTop
+                                ? "border-accent ring-2 ring-accent/30"
+                                : "border-border"
+                          }`}
+                        >
+                          {/* Bar visualization */}
+                          <div className="relative">
+                            <div
+                              className={`h-2 transition-all ${
+                                hasOutliers
+                                  ? "bg-destructive/30"
+                                  : isTop
+                                    ? "bg-accent/40"
+                                    : "bg-secondary"
+                              }`}
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                          
+                          {/* Content */}
+                          <div className={`p-3 ${
+                            hasOutliers
+                              ? "bg-destructive/10"
+                              : isTop
+                                ? "bg-accent/10"
+                                : "bg-secondary"
+                          }`}>
+                            {/* Vote value and count */}
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-3">
+                                <span className={`font-bold text-2xl ${hasOutliers ? "text-destructive" : "text-accent"}`}>
+                                  {group.value}
+                                </span>
+                                <span className="text-sm text-muted-foreground">
+                                  {group.count} {group.count === 1 ? "vote" : "votes"}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {shouldShowMostChosen && (
+                                  <span className="text-xs font-bold px-2 py-1 rounded-full bg-accent/20 text-accent" aria-label="Most chosen vote">
+                                    Most chosen
+                                  </span>
+                                )}
+                                {hasOutliers && (
+                                  <span className="text-xs font-bold px-2 py-1 rounded-full bg-destructive/20 text-destructive" aria-label="Contains outlier votes">
+                                    Outlier
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Participant names */}
+                            <div className="flex flex-wrap gap-2">
+                              {group.participants.map((p) => {
+                                const isOutlier = outliers.some((o) => o.id === p.id)
+                                return (
+                                  <span
+                                    key={p.id}
+                                    className={`text-xs px-2 py-1 rounded ${
+                                      isOutlier
+                                        ? "bg-destructive/20 text-destructive font-semibold"
+                                        : "bg-background/50 text-foreground"
+                                    }`}
+                                  >
+                                    {p.name}
+                                  </span>
+                                )
+                              })}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    )
-                  })}
+                      )
+                    })
+                  })()}
                 </div>
               )}
             </Card>
