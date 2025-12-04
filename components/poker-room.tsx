@@ -190,7 +190,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
             ws.send(JSON.stringify({ action: "subscribe", roomId }))
           }
 
-          ws.onmessage = (event) => {
+          ws.onmessage = async (event) => {
             try {
               const data = JSON.parse(event.data)
               if (data.type === "vote") {
