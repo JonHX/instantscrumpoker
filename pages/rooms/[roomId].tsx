@@ -11,7 +11,9 @@ export default function RoomPage() {
     return (
       <>
         <Head>
-          <title>Room - Instant Scrum Poker</title>
+          <title>Room - Instant Scrum Poker | 100% Free</title>
+          <meta name="description" content="Join a scrum poker room to estimate user stories with your team. 100% free, no sign-ups required." />
+          <meta name="robots" content="noindex, nofollow" />
         </Head>
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
@@ -25,7 +27,9 @@ export default function RoomPage() {
   return (
     <>
       <Head>
-        <title>Room - Instant Scrum Poker</title>
+        <title>Room {roomId.toUpperCase()} - Instant Scrum Poker | 100% Free</title>
+        <meta name="description" content="Join a scrum poker room to estimate user stories with your team. 100% free, no sign-ups required." />
+        <meta name="robots" content="noindex, nofollow" />
       </Head>
       <PokerRoom roomId={roomId} onExit={() => router.push("/")} />
     </>

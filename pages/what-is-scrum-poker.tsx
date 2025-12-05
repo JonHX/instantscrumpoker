@@ -8,7 +8,15 @@ export default function WhatIsScrumPoker() {
   return (
     <>
       <Head>
-        <title>What is Scrum Poker? - Instant Scrum Poker</title>
+        <title>What is Scrum Poker? - Complete Guide | Instant Scrum Poker</title>
+        <meta name="description" content="Learn what scrum poker (planning poker) is and how to use it. Complete step-by-step guide with video tutorial. Use our 100% free scrum poker tool to get started." />
+        <meta name="keywords" content="what is scrum poker, planning poker guide, how to play scrum poker, scrum poker tutorial, agile estimation guide, free scrum poker" />
+        <link rel="canonical" href="https://instantscrumpoker.com/what-is-scrum-poker" />
+        <meta property="og:title" content="What is Scrum Poker? - Complete Guide | Instant Scrum Poker" />
+        <meta property="og:description" content="Learn what scrum poker (planning poker) is and how to use it. Complete step-by-step guide with video tutorial. Use our 100% free scrum poker tool to get started." />
+        <meta property="og:url" content="https://instantscrumpoker.com/what-is-scrum-poker" />
+        <meta property="twitter:title" content="What is Scrum Poker? - Complete Guide | Instant Scrum Poker" />
+        <meta property="twitter:description" content="Learn what scrum poker (planning poker) is and how to use it. Complete step-by-step guide with video tutorial. Use our 100% free scrum poker tool to get started." />
       </Head>
       <div className="min-h-screen bg-background flex flex-col">
         <Nav />

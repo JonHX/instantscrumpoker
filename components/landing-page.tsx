@@ -157,16 +157,16 @@ export function LandingPage({ onCreateRoom, onJoinRoom }: LandingPageProps) {
               {isLoading ? "Creating..." : "Create Estimation Room"}
             </Button>
 
-            {/* Join Room Button */}
-            <Button
-              onClick={() => setShowJoinModal(true)}
-              variant="outline"
+          {/* Join Room Button */}
+          <Button
+            onClick={() => setShowJoinModal(true)}
+            variant="outline"
               className="w-full border-border text-foreground hover:bg-muted dark:hover:bg-muted bg-transparent py-6 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 transition-colors"
-              aria-label="Join room with code"
-            >
-              <LogIn className="w-4 h-4" aria-hidden="true" />
-              Join Room with Code
-            </Button>
+            aria-label="Join room with code"
+          >
+            <LogIn className="w-4 h-4" aria-hidden="true" />
+            Join Room with Code
+          </Button>
 
             <p className="text-xs text-muted-foreground">Share the room code with your team. No sign-up required.</p>
           </Card>

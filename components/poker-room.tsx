@@ -233,7 +233,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
                     
                     // Batch all state updates together
                     setParticipants(mappedParticipants)
-                    setIsVotingOpen(false)
+                setIsVotingOpen(false)
                     
                     if (isCleanSweep) {
                       setShowConfetti(true)
@@ -488,9 +488,9 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
         <div className="min-h-screen bg-background flex flex-col">
           <Nav />
           <main className="flex-1 flex items-center justify-center px-4" role="main">
-            <div className="text-center">
-              <p className="text-muted-foreground">Joining room...</p>
-            </div>
+          <div className="text-center">
+            <p className="text-muted-foreground">Joining room...</p>
+          </div>
           </main>
         </div>
       )
@@ -689,19 +689,19 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
                       
                       // Check if any participant in this group is an outlier
                       const hasOutliers = group.participants.some(p => outliers.some(o => o.id === p.id))
-                      
-                      return (
-                        <div
+
+                    return (
+                      <div
                           key={group.value}
-                          role="listitem"
+                        role="listitem"
                           className={`rounded-lg border-2 overflow-hidden transition-all ${
                             hasOutliers
                               ? "border-destructive/50"
                               : isTop
                                 ? "border-accent ring-2 ring-accent/30"
                                 : "border-border"
-                          }`}
-                        >
+                        }`}
+                      >
                           {/* Bar visualization */}
                           <div className="relative">
                             <div
@@ -729,7 +729,7 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
                               <div className="flex items-center gap-3">
                                 <span className={`font-bold text-2xl ${hasOutliers ? "text-destructive" : "text-accent"}`}>
                                   {group.value}
-                                </span>
+                          </span>
                                 <span className="text-sm text-muted-foreground">
                                   {group.count} {group.count === 1 ? "vote" : "votes"}
                                 </span>
@@ -737,16 +737,16 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
                               <div className="flex items-center gap-2">
                                 {shouldShowMostChosen && (
                                   <span className="text-xs font-bold px-2 py-1 rounded-full bg-accent/20 text-accent" aria-label="Most chosen vote">
-                                    Most chosen
-                                  </span>
-                                )}
+                              Most chosen
+                            </span>
+                          )}
                                 {hasOutliers && (
                                   <span className="text-xs font-bold px-2 py-1 rounded-full bg-destructive/20 text-destructive" aria-label="Contains outlier votes">
                                     Outlier
                                   </span>
                                 )}
-                              </div>
-                            </div>
+                        </div>
+                      </div>
                             
                             {/* Participant names */}
                             <div className="flex flex-wrap gap-2">
@@ -763,8 +763,8 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
                                   >
                                     {p.name}
                                   </span>
-                                )
-                              })}
+                    )
+                  })}
                             </div>
                           </div>
                         </div>
@@ -892,3 +892,4 @@ export function PokerRoom({ roomId, onExit }: PokerRoomProps) {
     </>
   )
 }
+
