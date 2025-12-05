@@ -25,8 +25,11 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
-        <title>Instant Scrum Poker - 100% Free Scrum Poker Planning Tool</title>
-        <meta name="description" content="100% free scrum poker tool for agile teams. No ads, no sign-ups, no credit card required. Simple planning poker tool for real-time story point estimation." />
+        <title>Instant Scrum Poker - Free Instant Planning Poker Tool</title>
+        <meta
+          name="description"
+          content="Free, instant planning poker for agile teams. No ads, no sign-ups. Estimate user stories together in real time with zero friction."
+        />
         <link rel="canonical" href="https://instantscrumpoker.com/" />
       </Head>
       <div className={inter.variable}>

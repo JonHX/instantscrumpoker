@@ -5,15 +5,24 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Instant Scrum Poker - 100% Free Scrum Poker Planning Tool</title>
-        <meta name="description" content="100% free scrum poker tool for agile teams. No ads, no sign-ups, no credit card required. Simple planning poker tool for real-time story point estimation." />
+        <title>Instant Scrum Poker - Free Instant Planning Poker Tool</title>
+        <meta
+          name="description"
+          content="Free, instant planning poker for agile teams. No ads, no sign-ups. Estimate user stories together in real time with zero friction."
+        />
         <meta name="keywords" content="free scrum poker, planning poker, agile estimation, story points, sprint planning, free agile tool, scrum poker online, planning poker free" />
         <link rel="canonical" href="https://instantscrumpoker.com/" />
-        <meta property="og:title" content="Instant Scrum Poker - 100% Free Scrum Poker Planning Tool" />
-        <meta property="og:description" content="100% free scrum poker tool for agile teams. No ads, no sign-ups, no credit card required. Simple planning poker tool for real-time story point estimation." />
+        <meta property="og:title" content="Instant Scrum Poker - Free Instant Planning Poker Tool" />
+        <meta
+          property="og:description"
+          content="Free, instant planning poker for agile teams. No ads, no sign-ups. Estimate user stories together in real time with zero friction."
+        />
         <meta property="og:url" content="https://instantscrumpoker.com/" />
-        <meta property="twitter:title" content="Instant Scrum Poker - 100% Free Scrum Poker Planning Tool" />
-        <meta property="twitter:description" content="100% free scrum poker tool for agile teams. No ads, no sign-ups, no credit card required. Simple planning poker tool for real-time story point estimation." />
+        <meta property="twitter:title" content="Instant Scrum Poker - Free Instant Planning Poker Tool" />
+        <meta
+          property="twitter:description"
+          content="Free, instant planning poker for agile teams. No ads, no sign-ups. Estimate user stories together in real time with zero friction."
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -21,7 +30,7 @@ export default function Home() {
               "@context": "https://schema.org",
               "@type": "WebApplication",
               "name": "Instant Scrum Poker",
-              "description": "100% free scrum poker tool for agile teams. No ads, no sign-ups, no credit card required. Simple planning poker tool for real-time story point estimation.",
+              "description": "Free, instant planning poker for agile teams. No ads, no sign-ups. Estimate user stories together in real time with zero friction.",
               "url": "https://instantscrumpoker.com",
               "applicationCategory": "BusinessApplication",
               "operatingSystem": "Web",

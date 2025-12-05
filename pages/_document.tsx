@@ -5,9 +5,12 @@ export default function Document() {
     <Html lang="en">
       <Head>
         {/* Primary Meta Tags */}
-        <meta name="title" content="Instant Scrum Poker - 100% Free Scrum Poker Planning Tool" />
-        <meta name="description" content="100% free scrum poker tool for agile teams. No ads, no sign-ups, no credit card required. Simple planning poker tool for real-time story point estimation." />
-        <meta name="keywords" content="scrum poker, planning poker, agile estimation, story points, sprint planning, agile tool, free scrum poker" />
+        <meta name="title" content="Instant Scrum Poker - Free Instant Planning Poker Tool" />
+        <meta
+          name="description"
+          content="Free, instant planning poker for agile teams. No ads, no sign-ups. Estimate user stories together in real time with zero friction."
+        />
+        <meta name="keywords" content="scrum poker, planning poker, agile estimation, story points, sprint planning, agile tool, free scrum poker, instant planning poker" />
         <meta name="author" content="Jon Tarrant" />
         <meta name="robots" content="index, follow" />
         <meta name="language" content="English" />
@@ -16,15 +19,21 @@ export default function Document() {
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://instantscrumpoker.com/" />
-        <meta property="og:title" content="Instant Scrum Poker - 100% Free Scrum Poker Planning Tool" />
-        <meta property="og:description" content="100% free scrum poker tool for agile teams. No ads, no sign-ups, no credit card required. Simple planning poker tool for real-time story point estimation." />
+        <meta property="og:title" content="Instant Scrum Poker - Free Instant Planning Poker Tool" />
+        <meta
+          property="og:description"
+          content="Free, instant planning poker for agile teams. No ads, no sign-ups. Estimate user stories together in real time with zero friction."
+        />
         <meta property="og:image" content="https://instantscrumpoker.com/logo2.png" />
         
         {/* Twitter */}
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:url" content="https://instantscrumpoker.com/" />
-        <meta property="twitter:title" content="Instant Scrum Poker - 100% Free Scrum Poker Planning Tool" />
-        <meta property="twitter:description" content="100% free scrum poker tool for agile teams. No ads, no sign-ups, no credit card required. Simple planning poker tool for real-time story point estimation." />
+        <meta property="twitter:title" content="Instant Scrum Poker - Free Instant Planning Poker Tool" />
+        <meta
+          property="twitter:description"
+          content="Free, instant planning poker for agile teams. No ads, no sign-ups. Estimate user stories together in real time with zero friction."
+        />
         <meta property="twitter:image" content="https://instantscrumpoker.com/logo2.png" />
         
         {/* Favicon - SVG only for modern browsers */}

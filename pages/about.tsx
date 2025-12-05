@@ -8,15 +8,24 @@ export default function About() {
   return (
     <>
       <Head>
-        <title>About - Instant Scrum Poker | 100% Free Forever</title>
-        <meta name="description" content="Learn about Instant Scrum Poker - a 100% free, ad-free scrum poker tool built for agile teams. No sign-ups, no credit cards, no catch. Free forever." />
-        <meta name="keywords" content="free scrum poker, about scrum poker tool, free agile tool, planning poker free" />
+        <title>About - Instant Scrum Poker | Free, Instant Planning Poker</title>
+        <meta
+          name="description"
+          content="Learn about Instant Scrum Poker - a free, ad-free planning poker tool built for agile teams. No sign-ups, no credit cards, no catch."
+        />
+        <meta name="keywords" content="free scrum poker, about scrum poker tool, free agile tool, planning poker free, instant planning poker" />
         <link rel="canonical" href="https://instantscrumpoker.com/about" />
-        <meta property="og:title" content="About - Instant Scrum Poker | 100% Free Forever" />
-        <meta property="og:description" content="Learn about Instant Scrum Poker - a 100% free, ad-free scrum poker tool built for agile teams. No sign-ups, no credit cards, no catch. Free forever." />
+        <meta property="og:title" content="About - Instant Scrum Poker | Free, Instant Planning Poker" />
+        <meta
+          property="og:description"
+          content="Learn about Instant Scrum Poker - a free, ad-free planning poker tool built for agile teams. No sign-ups, no credit cards, no catch."
+        />
         <meta property="og:url" content="https://instantscrumpoker.com/about" />
-        <meta property="twitter:title" content="About - Instant Scrum Poker | 100% Free Forever" />
-        <meta property="twitter:description" content="Learn about Instant Scrum Poker - a 100% free, ad-free scrum poker tool built for agile teams. No sign-ups, no credit cards, no catch. Free forever." />
+        <meta property="twitter:title" content="About - Instant Scrum Poker | Free, Instant Planning Poker" />
+        <meta
+          property="twitter:description"
+          content="Learn about Instant Scrum Poker - a free, ad-free planning poker tool built for agile teams. No sign-ups, no credit cards, no catch."
+        />
       </Head>
       <div className="min-h-screen bg-background flex flex-col">
         <Nav />
